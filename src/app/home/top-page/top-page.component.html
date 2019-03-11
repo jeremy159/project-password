@@ -1,3 +1,11 @@
-<img src="/assets/PasswordViz.png" class="title"/>
-<div class="subtitle">Ce qui se cache derrière 10 000 000 de mots de passe</div>
-<img src="/assets/Nuage_de_mots.png"/>
+<div fxLayout="column" fxLayout.gt-xs="row" fxLayoutAlign="space-between center">
+  <div  fxFlex="100%"
+        fxFlexFill>
+    <img src="/assets/PasswordViz.png" class="title" ngStyle.gt-sm="height: 80px;"/>
+    <div class="divider"></div>
+    <div class="subtitle">Ce qui se cache derrière 10 000 000 de mots de passe</div>
+  </div>
+  <img  src="/assets/Nuage_de_mots.png"
+        class="right-image"
+        ngStyle.sm="height: 400px;"/>
+</div>

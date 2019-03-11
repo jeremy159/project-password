@@ -1,11 +1,25 @@
 :host {
-    position: absolute;
-    left: 0;
-    top: 0;
     width: 100%;
     height: 100%;
 
+    .title {
+        height: 50px;
+    }
+
+    .divider {
+        height: 5px;
+        border-bottom: black 1px solid;
+    }
+
     .subtitle {
         font-family: 'Open Sans', sans-serif;
+    }
+
+    .right-image {
+        max-height: 100vh;
+
+        @media screen and (min-width: 745px) and (max-width: 959px) {
+            height: unset !important;
+        }
     }
 }
