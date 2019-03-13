@@ -5,7 +5,9 @@ import { catchError } from 'rxjs/operators';
 
 const headers = new HttpHeaders().set('Content-Type', 'application/json');
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class RestAPIService {
 
   private serverBaseUrl = 'http://localhost:3000/';

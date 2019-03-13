@@ -6,6 +6,7 @@ import { MatIconModule, MatButtonModule } from '@angular/material';
 import { HomeComponent } from './home/home.component';
 import { TopPageComponent } from './top-page/top-page.component';
 import { PasswordNounsChartComponent } from './password-nouns-chart/password-nouns-chart.component';
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { PasswordNounsChartComponent } from './password-nouns-chart/password-nou
     CommonModule,
     FlexLayoutModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    SharedModule
   ],
   exports: [
     HomeComponent
