@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { RestAPIService } from 'src/app/core/services/restAPI.service';
+import { Observable, forkJoin } from 'rxjs';
+import { NameOccurrence } from 'src/app/shared/models/name-occurrence';
 
 @Component({
   selector: 'pp-home',
@@ -7,9 +10,13 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HomeComponent implements OnInit {
 
-  constructor() { }
+  public passwordNounsChartData$: Observable<[NameOccurrence[], NameOccurrence[]]>;
 
-  ngOnInit() {
+  constructor(private restApiService: RestAPIService) { }
+
+  public ngOnInit(): void {
+    const femaleData$ = this.restApiService.getRequest<NameOccurrence[]>('noms_propres_female_summary.csv', true);
+    const maleData$ = this.restApiService.getRequest<NameOccurrence[]>('noms_propres_male_summary.csv', true);
+    this.passwordNounsChartData$ = forkJoin([femaleData$, maleData$]);
   }
-
 }
