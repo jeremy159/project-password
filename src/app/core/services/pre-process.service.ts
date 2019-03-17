@@ -22,4 +22,13 @@ export class PreProcessService {
       });
     }
   }
+
+  public sortData<T>(data: T[], field: string, ascending: boolean = true): void {
+    if (ascending) {
+      data.sort((a: T, b: T) => this.d3Service.d3.ascending(a[field], b[field]));
+    }
+    else {
+      data.sort((a: T, b: T) => this.d3Service.d3.descending(a[field], b[field]));
+    }
+  }
 }

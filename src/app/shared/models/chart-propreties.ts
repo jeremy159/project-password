@@ -1,7 +1,7 @@
 export interface ChartPropreties {
-  x: any;
-  y: any;
-  xAxis: d3.Axis<any>;
-  yAxis: d3.Axis<any>;
-  color: d3.ScaleOrdinal<any, any>;
+  x: d3.ScaleBand<string>;
+  y: d3.ScaleLinear<number, number>;
+  xAxis: d3.Axis<string>;
+  yAxis: d3.Axis<number>;
+  color: d3.ScaleOrdinal<string, string>;
 }
