@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "staging": "projet-password",
+    "default": "projet-password"
+  }
+}
