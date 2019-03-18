@@ -1,0 +1,16 @@
+<div fxLayout="column" fxLayout.gt-xs="row" fxLayoutAlign="space-between center">
+  <div  fxFlex="100%"
+        fxFlexFill>
+    <img  src="/assets/PasswordViz.png"
+          [ngStyle]="{'height.px': 50}"
+          [ngStyle.gt-sm]="{'height.px': 80}"/>
+    <div class="divider"></div>
+    <div class="subtitle">Ce qui se cache derrière 10 000 000 de mots de passe</div>
+  </div>
+  <img  src="/assets/Nuage_de_mots.png"
+        [ngStyle]="{'max-height.vh': 100}"
+        [ngStyle.lt-md]="{'max-height.px': 400}"/>
+</div>
+<button ppScrollToRef mat-mini-fab color="primary">
+  <mat-icon>keyboard_arrow_down</mat-icon>
+</button>
