@@ -83,6 +83,16 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     });
     formatedObject['autres'] /= total;
     firstNames.push('autres');
+
+    // Quick fix pour faire en sorte que les rectangles ne bougent pas
+    // (La somme étant plus petite, e.g. 2.63% au lieu de 2.70% pour les femmes)
+    let sum = 0;
+    for (const k in formatedObject) {
+      if (k !== 'gender') {
+        sum += formatedObject[k];
+      }
+    }
+    formatedObject['autres'] += this.genderCount[gender] / this.genders[0][gender] - sum;
     return {object: [formatedObject], keys: firstNames.reverse()};
   }
 
