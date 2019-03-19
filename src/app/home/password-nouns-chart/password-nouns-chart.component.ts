@@ -6,6 +6,7 @@ import { Margin } from 'src/app/shared/models/margin';
 import { ChartPropreties } from 'src/app/shared/models/chart-propreties';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
 import { Genders } from 'src/app/shared/models/genders';
+import d3Tip from 'd3-tip';
 
 interface GraphData {
   gender: string;
@@ -96,6 +97,15 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     return {object: [formatedObject], keys: firstNames.reverse()};
   }
 
+  private getTooltipText(name: string, formatedDataPercentage: any): string {
+    let nameData: any;
+    if (formatedDataPercentage.gender === 'female') {
+      nameData = this.femaleData.find((f: any) => f.name === name);
+    }
+    
+    return `${name}`;
+  }
+
   private initialize(): void {
     // Set the dimensions of the canvas / graph
     const margin: Margin = { top: 30, right: 20, bottom: 30, left: 50 };
@@ -174,6 +184,13 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     const colorScale: d3.ScaleOrdinal<string, string> = this.d3Service.d3.scaleOrdinal()
       .range(this[`${gender}Colors`]).domain(keys);
 
+    const tip = d3Tip().attr('class', 'd3-tip').offset([-10, 0]);
+
+    tip.html((d: any) => {
+      return this.getTooltipText(d.key, formatedData);
+    });
+    this.svgElement.call(tip);
+
     const bars = this.svgElement.selectAll(`.${gender}`)
       .remove().exit()
       .data(series)
@@ -185,7 +202,9 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
       .attr('x', () => this.chartProps.x(gender === 'female' ? 'feminin' : 'masculin'))
       .attr('width', this.chartProps.x.bandwidth())
       .attr('y', (d: any) => this.chartProps.y(d[0][1]))
-      .attr('height', (d: any) => this.chartProps.y(d[0][0]) - this.chartProps.y(d[0][1]));
+      .attr('height', (d: any) => this.chartProps.y(d[0][0]) - this.chartProps.y(d[0][1]))
+      .on('mouseover', tip.show)
+      .on('mouseout', tip.hide);
 
     this.svgElement.selectAll(`.${gender}`)
       .transition()
