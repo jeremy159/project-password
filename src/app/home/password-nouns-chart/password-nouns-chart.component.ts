@@ -37,6 +37,7 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
   private genderCount: GenderCount = {female: 0, male: 0};
   private femaleColors: string[] = ['#e377c2', '#2ca02c', '#ff7f0e', '#d62728', '#bcbd22', '#17becf'];
   private maleColors: string[] = ['#1f77b4', '#bcbd22', '#8c564b', '#ff7f0e', '#2ca02c', '#d62728'];
+  private tooltip: any;
 
   constructor(private scrollRefService: ScrollRefService,
               private d3Service: D3Service,
@@ -73,6 +74,7 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     const firstNOccurrences = 5;
     const total = this.genderCount[gender] + this.genders[0][gender];
     const formatedObject = { gender, autres: 0 };
+    const others: NameOccurrence = {name: 'autres', username: 0, password: 0, both: 0};
     data.forEach((d: NameOccurrence, index: number) => {
       if (index < firstNOccurrences) {
         formatedObject[d.name] = d.both / total;
@@ -80,10 +82,14 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
       }
       else {
         formatedObject['autres'] += d.both;
+        others.username += d.username;
+        others.password += d.password;
+        others.both += d.both;
       }
     });
     formatedObject['autres'] /= total;
     firstNames.push('autres');
+    this[`${gender}Data`].push(others);
 
     // Quick fix pour faire en sorte que les rectangles ne bougent pas
     // (La somme étant plus petite, e.g. 2.63% au lieu de 2.70% pour les femmes)
@@ -98,12 +104,19 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
   }
 
   private getTooltipText(name: string, formatedDataPercentage: any): string {
-    let nameData: any;
+    let nameData: NameOccurrence;
     if (formatedDataPercentage.gender === 'female') {
-      nameData = this.femaleData.find((f: any) => f.name === name);
+      nameData = this.femaleData.find((f: NameOccurrence) => f.name === name);
     }
-    
-    return `${name}`;
+    else {
+      nameData = this.maleData.find((m: NameOccurrence) => m.name === name);
+    }
+
+    return `<strong>Prénom:</strong> ${name}<br/>
+            <strong>Proportion:</strong> ${this.d3Service.getFormattedPercent(formatedDataPercentage[name])}<br/>
+            <strong>Nom d'usager:</strong> ${this.d3Service.getFormattedNumber(nameData.username)} fois<br/>
+            <strong>Mot de passe:</strong> ${this.d3Service.getFormattedNumber(nameData.password)} fois<br/>
+            <strong>Les deux:</strong> ${this.d3Service.getFormattedNumber(nameData.both)} fois<br/>`;
   }
 
   private initialize(): void {
@@ -133,6 +146,11 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
     this.d3Service.createAxes(this.svgElement, this.chartProps.xAxis, width, height, null, 'Sexe');
+
+    // Define the div for the tooltip
+    this.tooltip = this.d3Service.d3.select(this.chartElement.nativeElement).append('div')
+      .attr('class', 'tooltip')
+      .style('opacity', 0);
 
     this.createBarChart(height);
   }
@@ -184,13 +202,6 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     const colorScale: d3.ScaleOrdinal<string, string> = this.d3Service.d3.scaleOrdinal()
       .range(this[`${gender}Colors`]).domain(keys);
 
-    const tip = d3Tip().attr('class', 'd3-tip').offset([-10, 0]);
-
-    tip.html((d: any) => {
-      return this.getTooltipText(d.key, formatedData);
-    });
-    this.svgElement.call(tip);
-
     const bars = this.svgElement.selectAll(`.${gender}`)
       .remove().exit()
       .data(series)
@@ -203,12 +214,29 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
       .attr('width', this.chartProps.x.bandwidth())
       .attr('y', (d: any) => this.chartProps.y(d[0][1]))
       .attr('height', (d: any) => this.chartProps.y(d[0][0]) - this.chartProps.y(d[0][1]))
-      .on('mouseover', tip.show)
-      .on('mouseout', tip.hide);
+      .on('mouseover', (d: any) => {
+        this.showTooltip(d, formatedData);
+      })
+      .on('mouseout', (d: any) => {
+        this.hideTooltip(d);
+      });
 
     this.svgElement.selectAll(`.${gender}`)
       .transition()
       .duration(1000)
       .attr('fill', (d: any) => colorScale(d.key));
+  }
+
+  private showTooltip(d: any, formatedData: any[]): void {
+    this.tooltip.transition()
+      .duration(200)
+      .style('opacity', .9);
+    this.tooltip.html(this.getTooltipText(d.key, formatedData[0]));
+  }
+
+  private hideTooltip(d: any): void {
+    this.tooltip.transition()
+      .duration(500)
+      .style('opacity', 0);
   }
 }
