@@ -11,6 +11,7 @@ import { Genders } from 'src/app/shared/models/genders';
 })
 export class HomeComponent implements OnInit {
 
+  public showComponent = false;
   public passwordNounsChartData$: Observable<[NameOccurrence[], NameOccurrence[], Genders]>;
 
   constructor(private restApiService: RestAPIService) { }

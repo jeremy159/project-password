@@ -1,5 +1,7 @@
 <pp-top-page></pp-top-page>
-<pp-password-nouns-chart
-    *ngIf="passwordNounsChartData$ | async as passwordNounsChartData"
-    [data]="passwordNounsChartData">
-</pp-password-nouns-chart>
+<div (ppDefearLoad)="showComponent = true">
+    <pp-password-nouns-chart
+        *ngIf="showComponent && passwordNounsChartData$ | async as passwordNounsChartData"
+        [data]="passwordNounsChartData">
+    </pp-password-nouns-chart>
+</div>

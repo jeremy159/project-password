@@ -10,12 +10,18 @@ import d3Tip from 'd3-tip';
 
 interface GraphData {
   gender: string;
-  percentage: number;
+  proportion: number;
 }
 
-interface GenderCount {
-  female: number;
-  male: number;
+interface SplitData {
+  female: {
+    object: any,
+    keys: string[]
+  };
+  male: {
+    object: any,
+    keys: string[]
+  };
 }
 
 @Component({
@@ -33,11 +39,14 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
   private maleData: NameOccurrence[];
   private genders: Genders[];
   private svgElement: any;
-  private chartProps: ChartPropreties = {x: undefined, y: undefined, xAxis: undefined, yAxis: undefined, color: undefined};
-  private genderCount: GenderCount = {female: 0, male: 0};
-  private femaleColors: string[] = ['#e377c2', '#2ca02c', '#ff7f0e', '#d62728', '#bcbd22', '#17becf'];
-  private maleColors: string[] = ['#1f77b4', '#bcbd22', '#8c564b', '#ff7f0e', '#2ca02c', '#d62728'];
   private tooltip: any;
+  private chartProps: ChartPropreties = {x: undefined, y: undefined, xAxis: undefined, yAxis: undefined, color: undefined};
+  private femaleColors: string[] = ['#880E4F', '#AD1457', '#C2185B', '#D81B60', '#E91E63', '#EC407A'];
+  private maleColors: string[] = ['#1A237E', '#283593', '#303F9F', '#3949AB', '#3F51B5', '#5C6BC0'];
+  private femaleCount: number;
+  private maleCount: number;
+  private formatedInitialData: GraphData[];
+  private formatedSplitData: SplitData = {female: {object: {}, keys: []}, male: {object: {}, keys: []}};
 
   constructor(private scrollRefService: ScrollRefService,
               private d3Service: D3Service,
@@ -52,27 +61,40 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     this.preProcessService.convertNumbers(this.maleData, ['username', 'password', 'both']);
     this.preProcessService.convertNumbers(this.genders, ['male', 'female']);
 
-    this.initialize();
+    this.formatData();
+    const height = this.initialize();
+    this.createBarChart(height);
   }
 
   public ngAfterViewInit(): void {
     this.scrollRefService.scrollElement = this.scrollReference;
   }
 
-  private formatInitialData(): GraphData[] {
-    this.genderCount.female = this.d3Service.d3.sum(this.femaleData, (f: NameOccurrence) => f.both);
-    this.genderCount.male = this.d3Service.d3.sum(this.maleData, (f: NameOccurrence) => f.both);
-    const initialData: GraphData[] = [
-      {gender: 'masculin', percentage: this.genderCount.male / this.genders[0].male},
-      {gender: 'feminin', percentage: this.genderCount.female / this.genders[0].female}
-    ];
-    return initialData;
+  private formatData(): void {
+    this.formatInitialData();
+    this.formatSplitingData('female', this.femaleCount);
+    this.formatSplitingData('male', this.maleCount);
   }
 
-  private formatSplitingData(gender: string, data: NameOccurrence[]): any {
+  private formatInitialData(): void {
+    this.femaleCount = this.d3Service.d3.sum(this.femaleData, (f: NameOccurrence) => f.both);
+    this.maleCount = this.d3Service.d3.sum(this.maleData, (f: NameOccurrence) => f.both);
+    this.formatedInitialData = [
+      {gender: 'masculin', proportion: this.maleCount / this.genders[0].male},
+      {gender: 'feminin', proportion: this.femaleCount / this.genders[0].female}
+    ];
+  }
+
+  private formatSplitingData(gender: string, count: number): void {
+    const data: NameOccurrence[] = this[`${gender}Data`].slice();
+
+    // data = data.sort((d1: NameOccurrence, d2: NameOccurrence) =>
+    //   this.d3Service.d3.descending(d1.both / d1.username, d2.both / d2.username));
+    this.preProcessService.sortData(data, 'both', false);
+
     const firstNames = [];
     const firstNOccurrences = 5;
-    const total = this.genderCount[gender] + this.genders[0][gender];
+    const total = count + this.genders[0][gender];
     const formatedObject = { gender, autres: 0 };
     const others: NameOccurrence = {name: 'autres', username: 0, password: 0, both: 0};
     data.forEach((d: NameOccurrence, index: number) => {
@@ -88,7 +110,7 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
       }
     });
     formatedObject['autres'] /= total;
-    firstNames.push('autres');
+    firstNames.unshift('autres');
     this[`${gender}Data`].push(others);
 
     // Quick fix pour faire en sorte que les rectangles ne bougent pas
@@ -99,13 +121,13 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
         sum += formatedObject[k];
       }
     }
-    formatedObject['autres'] += this.genderCount[gender] / this.genders[0][gender] - sum;
-    return {object: [formatedObject], keys: firstNames.reverse()};
+    formatedObject['autres'] += count / this.genders[0][gender] - sum;
+    this.formatedSplitData[gender] = {object: [formatedObject], keys: firstNames};
   }
 
-  private getTooltipText(name: string, formatedDataPercentage: any): string {
+  private getTooltipText(name: string, gender: string): string {
     let nameData: NameOccurrence;
-    if (formatedDataPercentage.gender === 'female') {
+    if (gender === 'female') {
       nameData = this.femaleData.find((f: NameOccurrence) => f.name === name);
     }
     else {
@@ -113,13 +135,13 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     }
 
     return `<strong>Prénom:</strong> ${name}<br/>
-            <strong>Proportion:</strong> ${this.d3Service.getFormattedPercent(formatedDataPercentage[name])}<br/>
+            <strong>Proportion:</strong> ${this.d3Service.getFormattedPercent(nameData.both / this[`${gender}Count`])}<br/>
             <strong>Nom d'usager:</strong> ${this.d3Service.getFormattedNumber(nameData.username)} fois<br/>
             <strong>Mot de passe:</strong> ${this.d3Service.getFormattedNumber(nameData.password)} fois<br/>
             <strong>Les deux:</strong> ${this.d3Service.getFormattedNumber(nameData.both)} fois<br/>`;
   }
 
-  private initialize(): void {
+  private initialize(): number {
     // Set the dimensions of the canvas / graph
     const margin: Margin = { top: 30, right: 20, bottom: 30, left: 50 };
     const width = 400 - margin.left - margin.right;
@@ -133,7 +155,8 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     this.chartProps.y.domain([0, 0.05]);
 
     this.chartProps.color = this.d3Service.d3.scaleOrdinal()
-      .range([this.maleColors[0], this.femaleColors[0]]).domain(['masculin', 'feminin']);
+      .range([this.maleColors[this.maleColors.length - 1], this.femaleColors[this.femaleColors.length - 1]])
+      .domain(['masculin', 'feminin']);
 
     // Define the axes
     this.chartProps.xAxis = this.d3Service.d3.axisBottom(this.chartProps.x);
@@ -145,21 +168,19 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
       .append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    this.d3Service.createAxes(this.svgElement, this.chartProps.xAxis, width, height, null, 'Sexe');
+    this.d3Service.createAxes(this.svgElement, this.chartProps.xAxis, width, height, null);
 
     // Define the div for the tooltip
     this.tooltip = this.d3Service.d3.select(this.chartElement.nativeElement).append('div')
       .attr('class', 'tooltip')
       .style('opacity', 0);
 
-    this.createBarChart(height);
+    return height;
   }
 
   private createBarChart(height: number): void {
-    const initialData = this.formatInitialData();
-
     const bars = this.svgElement.selectAll('rect')
-      .data(initialData)
+      .data(this.formatedInitialData)
       .enter()
       .append('g');
 
@@ -168,39 +189,31 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
       .attr('fill', (d: GraphData) => this.chartProps.color(d.gender))
       .attr('x', (d: GraphData) => this.chartProps.x(d.gender))
       .attr('width', this.chartProps.x.bandwidth())
-      .attr('y', (d: GraphData) => this.chartProps.y(d.percentage))
+      .attr('y', (d: GraphData) => this.chartProps.y(d.proportion))
       .attr('height', 0)
       .on('click', (d: GraphData) => this.splitBar(d.gender === 'feminin' ? 'female' : 'male'));
 
     this.svgElement.selectAll('.female, .male').transition()
       .duration(1000)
-      .attr('height', (d: GraphData) => height - this.chartProps.y(d.percentage));
+      .attr('height', (d: GraphData) => height - this.chartProps.y(d.proportion));
 
     bars.append('text')
       .attr('class', 'label')
       .attr('x', (d: GraphData) => this.chartProps.x(d.gender) + this.chartProps.x.bandwidth() / 2)
-      .attr('y', (d: GraphData) => this.chartProps.y(d.percentage) - 5)
-      .text((d: GraphData) => this.d3Service.getFormattedPercent(d.percentage));
+      .attr('y', (d: GraphData) => this.chartProps.y(d.proportion) - 5)
+      .text((d: GraphData) => this.d3Service.getFormattedPercent(d.proportion));
   }
 
   private splitBar(gender: string): void {
-    const data: NameOccurrence[] = this[`${gender}Data`].slice();
-
-    this.preProcessService.sortData(data, 'both', false);
-
-    const formated = this.formatSplitingData(gender, data);
-    const formatedData = formated.object;
-    const keys = formated.keys;
-
     const stack = this.d3Service.d3.stack()
-      .keys(keys)
+      .keys(this.formatedSplitData[gender].keys)
       .order(this.d3Service.d3.stackOrderNone)
       .offset(this.d3Service.d3.stackOffsetNone);
 
-    const series = stack(formatedData);
+    const series = stack(this.formatedSplitData[gender].object);
 
     const colorScale: d3.ScaleOrdinal<string, string> = this.d3Service.d3.scaleOrdinal()
-      .range(this[`${gender}Colors`]).domain(keys);
+      .range(this[`${gender}Colors`]).domain(this.formatedSplitData[gender].keys);
 
     const bars = this.svgElement.selectAll(`.${gender}`)
       .remove().exit()
@@ -208,20 +221,20 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
       .enter();
 
     bars.append('rect')
-      .attr('class', () => `${gender}`)
+      .attr('class', () => `${gender}-split`)
       .attr('fill', () => this.chartProps.color(gender === 'female' ? 'feminin' : 'masculin'))
       .attr('x', () => this.chartProps.x(gender === 'female' ? 'feminin' : 'masculin'))
       .attr('width', this.chartProps.x.bandwidth())
       .attr('y', (d: any) => this.chartProps.y(d[0][1]))
       .attr('height', (d: any) => this.chartProps.y(d[0][0]) - this.chartProps.y(d[0][1]))
       .on('mouseover', (d: any) => {
-        this.showTooltip(d, formatedData);
+        this.showTooltip(d, this.formatedSplitData[gender].object);
       })
       .on('mouseout', (d: any) => {
         this.hideTooltip(d);
       });
 
-    this.svgElement.selectAll(`.${gender}`)
+    this.svgElement.selectAll(`.${gender}-split`)
       .transition()
       .duration(1000)
       .attr('fill', (d: any) => colorScale(d.key));
@@ -231,7 +244,7 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     this.tooltip.transition()
       .duration(200)
       .style('opacity', .9);
-    this.tooltip.html(this.getTooltipText(d.key, formatedData[0]));
+    this.tooltip.html(this.getTooltipText(d.key, formatedData[0].gender));
   }
 
   private hideTooltip(d: any): void {
