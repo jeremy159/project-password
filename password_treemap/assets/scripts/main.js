@@ -37,26 +37,13 @@
    .round(false);
 
   /***** Chargement des données *****/
-  var json = {"name": "Catégories", "children": []}
+  var json = {}
   await new Promise((resolve, reject) => {
-    var counter = 0; 
-    files.forEach(async (file) => {     
-      d3.csv(file).then(function(data) {
-        //var col = data.columns;
-        //var perc = 0.05*data.length;
-        //data = data.slice(0, 200);
-        //data.columns = col;
-        weight(data);
-        json.children.push(hierarchy(data));
-        counter++;
-        if(counter === files.length)
-          resolve("done!");
-      });
+      d3.json("data_100.json").then(function(data) {
+        json = data;
+        resolve();
     });
   });
- 
-  var meaning = await meanings();
-  json.children.push(hierarchy(meaning));
 
   var svg = d3.select("#treemap")
     .attr("width", width + margin.left + margin.right)
