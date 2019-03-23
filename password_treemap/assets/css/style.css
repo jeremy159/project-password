@@ -80,3 +80,28 @@ rect.parent,
   font-size:10px !important;
   color: #fff;
 }
+/***** SVG *****/
+.axis {
+  shape-rendering: crispEdges
+}
+
+.axis line {
+  display: none;
+}
+
+.axis path {
+  fill: none;
+  stroke: black;
+  shape-rendering: crispEdges;
+}
+
+.y.axis path {
+  fill: none;
+  stroke: black;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.label {
+  font-size: 10px;
+}

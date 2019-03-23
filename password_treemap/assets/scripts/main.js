@@ -3,39 +3,9 @@
 (async function(d3, localization) {
   "use strict";
 
-  var barChartMargin = {
-    top: 0,
-    right: 40,
-    bottom: 0,
-    left: 40
-  };
-  var barChartWidth = 300 - barChartMargin.left - barChartMargin.right;
-  var barChartHeight = 150 - barChartMargin.top - barChartMargin.bottom;
-
-  /***** Échelles utilisées *****/
-  var color = d3.scaleOrdinal();
-  var x = d3.scaleLinear().range([0, barChartWidth]);
-  var y = d3.scaleBand().range([0, barChartHeight]).padding(0.1);
-
-  var yAxis = d3.axisLeft(y);
-
-  /***** Création des éléments du diagramme à barres *****/
-  var barChartSvg = d3.select("#bar-chart")
-  .attr("width", barChartWidth + barChartMargin.left + barChartMargin.right)
-  .attr("height", barChartHeight + barChartMargin.top + barChartMargin.bottom);
-
-  var barChartGroup = barChartSvg.append("g")
-    .attr("transform", "translate(" + barChartMargin.left + "," + barChartMargin.top + ")");
-
-  var barChartBarsGroup = barChartGroup.append("g");
-  var barChartAxisGroup = barChartGroup.append("g")
-    .attr("class", "axis y");
-
-  //////////////////////////////////////////
-
   var margin = { top:30, right:0, bottom:20, left:0 };
-  var width = 1000;
-  var height = 600;
+  var width = 850;
+  var height = 650;
   var transitioning; 
   var formatNumber = d3.format(",");
 
@@ -55,7 +25,7 @@
    .paddingInner(0)
    .round(false);
 
-  /***** Chargement des données *****/
+  /***** Chargement des données synchrone *****/
   var json = {}
   await new Promise((resolve, reject) => {
       d3.json("data_100.json").then(function(data) {
@@ -64,7 +34,45 @@
     });
   });
 
+  /***** BARCHART *****/
+  var barChartMargin = {
+    top: 0,
+    right: 40,
+    bottom: 0,
+    left: 40
+  };
+  var barChartWidth = 300 - barChartMargin.left - barChartMargin.right;
+  var barChartHeight = 150 - barChartMargin.top - barChartMargin.bottom;
+
+  /***** Création des éléments du diagramme à barres *****/
+  var barChartSvg = d3.select("#bar-chart")
+    .attr("width", barChartWidth + barChartMargin.left + barChartMargin.right)
+    .attr("height", barChartHeight + barChartMargin.top + barChartMargin.bottom)
+    .attr("transform", `translate(${width + 50}, ${30})`)
+  
+
+  var barChartGroup = barChartSvg.append("g")
+    .attr("transform", "translate(" + barChartMargin.left + "," + barChartMargin.top + ")");
+
+  var barChartBarsGroup = barChartGroup.append("g");
+  var barChartAxisGroup = barChartGroup.append("g")
+    .attr("class", "axis y");
+
+  // On ajoute un clipPath pour pas que l'animation du treemap sorte de ses dimensions
+  d3.select("svg")  
+    .attr("width", "100%")
+    .attr("height", height + margin.bottom + margin.top);
+  d3.select("svg")
+    .append("defs")
+    .append("clipPath")
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.bottom + margin.top)
+    
+  // Treemap
   var svg = d3.select("#treemap")
+    .attr("clip-path", "url(#clip)")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.bottom + margin.top)
     .attr("margin-left", -margin.left + "px")
@@ -73,7 +81,7 @@
       .attr("transform", `translate(${margin.left}, ${margin.top})`)
       .style("shape-rendering", "crispEdges");
 
-  //Titre
+  //Navigation
   var grandparent = svg.append("g")
     .attr("class", "grandparent");  
   grandparent.append("rect")
@@ -95,7 +103,21 @@
           }));
   display(root);
 
+  /**
+   * Crée ou met à jour le treemap en fonction du noeud d
+   * @param {Node} d 
+   */
   function display(d) {
+    //Bar chart
+    updateBarChart(d);
+    d3.select("#bar-chart")
+      .attr("visibility", () => {
+        if (d.data.name == 'catégories')
+          return 'hidden';
+        return 'visible';
+      });
+
+    // Barre de navigation
     grandparent.datum(d)
       .on("click", d => transition(d.parent))
       .select("text")
@@ -104,7 +126,7 @@
     grandparent.datum(d)
         .select("rect")
         .attr("fill", d => {
-          var alt = d.data.name.match(/\((.*)\)/)
+          var alt = d.data.name.match(/\((.*)\)/) // Au cas où le nom est 'restants (*)'
           var name = ""
           if (alt)
             name = alt[1]
@@ -114,22 +136,16 @@
           else return color(name)
         });        
 
-    //Layout top
+    //Ajoute les éléments du treemap au même niveau que la balise de la barre de navigation
     var g1 = svg.insert("g", ".grandparent")
       .datum(d)
       .attr("class", "depth");
-    //Catégories
+
+    // Ajoute les enfants de chaque éléments du treemap
     var g = g1.selectAll("g")
       .data(d.children)
       .enter()
-      .append("g");
-    g.filter(d => d.children)
-      .classed("children", true)
-      .classed("blink", (d)=> {
-        return d.parent.data.name != "catégories" && d.parent.data.name != "significations"
-      })
-      .on("click", transition);
-    //Sous-catégories
+      .append("g")
     g.selectAll(".child")
       .data(d => d.children || [d])
       .enter()
@@ -153,6 +169,18 @@
       })
       .attr("class", "textdiv"); //textdiv class allows us to style the text easily with CSS
 
+    //Si on est pas à la racine de l'arbre et qu'il y a des enfants qu'il est possible de cliquer on les fait clignoter
+    g.filter(d => d.children)
+      .classed("children", true)      
+      .classed("blink", (d)=> {
+        return d.parent.data.name != "catégories" && d.parent.data.name != "significations"
+      })
+      .on("click", transition);
+
+    /**
+     * Transition entre les parents/enfants
+     * @param {*} d 
+     */
     function transition(d) {
       if (transitioning || !d) return;
       transitioning = true;
@@ -255,5 +283,46 @@
         })
         .join(sep);
     }
+  function updateBarChart(d) {
+    
+    var data = d.children.map(x => x);
+    data = data.filter((x) => {
+      return x.children === undefined
+    })
+    data = data.slice(0,5);
+
+    var x_bar = d3.scaleLinear()
+      .range([0, barChartWidth*3/4])
+      .domain([0, d3.max(data, x => x.value)])
+    var y_bar = d3.scaleBand()
+      .range([0, barChartHeight])
+      .domain(data.map(x => x.data.name))
+      .padding(0.1)
+
+    var yAxis = d3.axisLeft(y_bar);
+
+    var bars = barChartBarsGroup.selectAll("g")
+      .remove()
+      .exit()
+      .data(data);
+    
+    barChartAxisGroup.call(yAxis);
+      
+    bars = bars.enter().append("g");
+    bars.append("rect")
+      .attr("class", "bar")
+      .attr("y", (d, i) => y_bar(d.data.name))
+      .attr("width", d => x_bar(d.value))
+      .attr("height", d => y_bar.bandwidth())
+      .attr("fill", d => {
+          while (d.depth > 1) d = d.parent; 
+          return color(d.data.name); 
+      });
+    bars.append("text")
+      .attr("class", "label")
+      .attr("y", d => y_bar(d.data.name) + y_bar.bandwidth() / 2 + 4)
+      .attr("x", d => x_bar(d.value) + 3)
+      .text(d => formatNumber(d.value));
+  }
 
 })(d3, localization);
