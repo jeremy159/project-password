@@ -4,8 +4,8 @@
   "use strict";
 
   var margin = { top:30, right:0, bottom:20, left:0 };
-  var width = 900;
-  var height = 650;
+  var width = 750;
+  var height = 500;
   var transitioning; 
   var formatNumber = d3.format(",");
 
@@ -298,31 +298,41 @@
       .range([0, barChartHeight])
       .domain(data.map(x => x.data.name))
       .padding(0.1)
-
-    var yAxis = d3.axisLeft(y_bar);
-
-    var bars = barChartBarsGroup.selectAll("g")
-      .remove()
-      .exit()
-      .data(data);
-    
-    barChartAxisGroup.call(yAxis);
       
-    bars = bars.enter().append("g");
-    bars.append("rect")
+    var yAxis = d3.axisLeft(y_bar);
+    barChartAxisGroup.call(yAxis); 
+
+    var bars = barChartBarsGroup
+      .selectAll("g").remove().exit().data(data);
+    bars.select("rect")
+      .transition().duration(650)
+      .attr("width", d => x_bar(d.value));
+    
+
+    //bars = barChartBarsGroup.selectAll("g").remove().exit().data(data);
+    //enter
+    bars.enter()
+      .append("g")
+      .append("rect")
       .attr("class", "bar")
       .attr("y", (d, i) => y_bar(d.data.name))
-      .attr("width", d => x_bar(d.value))
       .attr("height", d => y_bar.bandwidth())
+      .transition().duration(650)
+      .attr("width", d => x_bar(d.value))
       .attr("fill", d => {
           while (d.depth > 1) d = d.parent; 
           return color(d.data.name); 
       });
-    bars.append("text")
+
+    bars.enter()
+      .append("g").append("text")
       .attr("class", "label")
       .attr("y", d => y_bar(d.data.name) + y_bar.bandwidth() / 2 + 4)
+      .transition().duration(650)
       .attr("x", d => x_bar(d.value) + 3)
       .text(d => formatNumber(d.value));
+
+    
   }
 
 })(d3, localization);
