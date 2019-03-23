@@ -44,7 +44,7 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
   private genders: Genders[];
   private svgElement: any;
   private tooltip: any;
-  private chartProps: ChartPropreties = {x: undefined, y: undefined, xAxis: undefined, yAxis: undefined, color: undefined};
+  private chartProps: ChartPropreties = {x: undefined, y: undefined, xAxis: undefined, yAxis: undefined, color: undefined, height: 0};
   private femaleColors: string[] = ['#880E4F', '#AD1457', '#C2185B', '#D81B60', '#E91E63', '#EC407A'];
   private maleColors: string[] = ['#1A237E', '#283593', '#303F9F', '#3949AB', '#3F51B5', '#5C6BC0'];
   private femaleCount: number;
@@ -73,8 +73,8 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     this.initializeInput();
 
     this.formatData();
-    const height = this.initialize();
-    this.createBarChart(height);
+    this.initialize();
+    // this.createBarChart();
   }
 
   public ngAfterViewInit(): void {
@@ -156,15 +156,15 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
             <strong>Les deux:</strong> ${this.d3Service.getFormattedNumber(nameData.both)} fois<br/>`;
   }
 
-  private initialize(): number {
+  private initialize(): void {
     // Set the dimensions of the canvas / graph
     const margin: Margin = { top: 30, right: 20, bottom: 30, left: 50 };
     const width = 400 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    this.chartProps.height = 400 - margin.top - margin.bottom;
 
     // Set the ranges
     this.chartProps.x = this.d3Service.d3.scaleBand().range([0, width]).round(0.05).padding(0.4);
-    this.chartProps.y = this.d3Service.d3.scaleLinear().range([height, 0]);
+    this.chartProps.y = this.d3Service.d3.scaleLinear().range([this.chartProps.height, 0]);
 
     this.chartProps.x.domain(['masculin', 'feminin']);
     this.chartProps.y.domain([0, 0.04]);
@@ -179,21 +179,19 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     this.svgElement = this.d3Service.d3.select(this.chartElement.nativeElement)
       .append('svg')
       .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+      .attr('height', this.chartProps.height + margin.top + margin.bottom)
       .append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    this.d3Service.createAxes(this.svgElement, this.chartProps.xAxis, width, height, null);
+    this.d3Service.createAxes(this.svgElement, this.chartProps.xAxis, width, this.chartProps.height, null);
 
     // Define the div for the tooltip
     this.tooltip = this.d3Service.d3.select(this.chartElement.nativeElement).append('div')
       .attr('class', 'tooltip')
       .style('opacity', 0);
-
-    return height;
   }
 
-  private createBarChart(height: number): void {
+  public createBarChart(): void {
     const bars = this.svgElement.selectAll('rect')
       .data(this.formatedInitialData)
       .enter()
@@ -210,7 +208,7 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
 
     this.svgElement.selectAll('.female, .male').transition()
       .duration(1000)
-      .attr('height', (d: GraphData) => height - this.chartProps.y(d.proportion));
+      .attr('height', (d: GraphData) => this.chartProps.height - this.chartProps.y(d.proportion));
 
     bars.append('text')
       .attr('class', 'label')

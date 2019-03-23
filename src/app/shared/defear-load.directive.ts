@@ -12,20 +12,20 @@ export class DefearLoadDirective implements AfterViewInit {
   public ngAfterViewInit(): void {
     const options: IntersectionObserverInit = {
       root: null,
-      rootMargin: '10px',
+      rootMargin: '',
       threshold: 1.0
     };
     this.intersectionObserver = new IntersectionObserver(entries => {
       this.checkForIntersection(entries);
     }, options);
-    this.intersectionObserver.observe(<Element>this.elementRef.nativeElement);
+    this.intersectionObserver.observe(this.elementRef.nativeElement);
   }
 
   private checkForIntersection(entries: Array<IntersectionObserverEntry>): void {
     entries.forEach((entry: IntersectionObserverEntry) => {
       if (this.isIntersecting(entry)) {
         this.ppDefearLoad.emit();
-        this.intersectionObserver.unobserve(<Element>this.elementRef.nativeElement);
+        this.intersectionObserver.unobserve(this.elementRef.nativeElement);
         this.intersectionObserver.disconnect();
       }
     });
