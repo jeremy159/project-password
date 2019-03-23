@@ -10,9 +10,14 @@ export class DefearLoadDirective implements AfterViewInit {
   constructor(private elementRef: ElementRef) { }
 
   public ngAfterViewInit(): void {
+    const options: IntersectionObserverInit = {
+      root: null,
+      rootMargin: '10px',
+      threshold: 1.0
+    };
     this.intersectionObserver = new IntersectionObserver(entries => {
       this.checkForIntersection(entries);
-    }, {threshold: 1.0});
+    }, options);
     this.intersectionObserver.observe(<Element>this.elementRef.nativeElement);
   }
 
