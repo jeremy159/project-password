@@ -7,6 +7,9 @@ import { ChartPropreties } from 'src/app/shared/models/chart-propreties';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
 import { Genders } from 'src/app/shared/models/genders';
 import d3Tip from 'd3-tip';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, switchMap, map, tap } from 'rxjs/operators';
+import { Observable, from, Subject, BehaviorSubject } from 'rxjs';
 
 interface GraphData {
   gender: string;
@@ -37,10 +40,11 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
   @ViewChild('chart') private chartElement: ElementRef;
   private femaleData: NameOccurrence[];
   private maleData: NameOccurrence[];
+  private mixedData: NameOccurrence[];
   private genders: Genders[];
   private svgElement: any;
   private tooltip: any;
-  private chartProps: ChartPropreties = {x: undefined, y: undefined, xAxis: undefined, yAxis: undefined, color: undefined};
+  private chartProps: ChartPropreties = {x: undefined, y: undefined, xAxis: undefined, yAxis: undefined, color: undefined, height: 0};
   private femaleColors: string[] = ['#880E4F', '#AD1457', '#C2185B', '#D81B60', '#E91E63', '#EC407A'];
   private maleColors: string[] = ['#1A237E', '#283593', '#303F9F', '#3949AB', '#3F51B5', '#5C6BC0'];
   private femaleCount: number;
@@ -48,9 +52,14 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
   private formatedInitialData: GraphData[];
   private formatedSplitData: SplitData = {female: {object: {}, keys: []}, male: {object: {}, keys: []}};
 
+  public searchField: FormControl;
+  public formGroup: FormGroup;
+  public searchResult$: Observable<string>;
+
   constructor(private scrollRefService: ScrollRefService,
               private d3Service: D3Service,
-              private preProcessService: PreProcessService) { }
+              private preProcessService: PreProcessService,
+              private fb: FormBuilder) { }
 
   public ngOnInit(): void {
     this.femaleData = this.data[0];
@@ -61,9 +70,11 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     this.preProcessService.convertNumbers(this.maleData, ['username', 'password', 'both']);
     this.preProcessService.convertNumbers(this.genders, ['male', 'female']);
 
+    this.initializeInput();
+
     this.formatData();
-    const height = this.initialize();
-    this.createBarChart(height);
+    this.initialize();
+    // this.createBarChart();
   }
 
   public ngAfterViewInit(): void {
@@ -83,10 +94,14 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
       {gender: 'masculin', proportion: this.maleCount / this.genders[0].male},
       {gender: 'feminin', proportion: this.femaleCount / this.genders[0].female}
     ];
+    this.mixedData = this.maleData.slice().concat(this.femaleData.slice());
+    // this.mixedData = this.mixedData.sort((d1: NameOccurrence, d2: NameOccurrence) =>
+    //   this.d3Service.d3.descending(d1.both / d1.username, d2.both / d2.username));
+    this.preProcessService.sortData(this.mixedData, 'both', false);
   }
 
   private formatSplitingData(gender: string, count: number): void {
-    const data: NameOccurrence[] = this[`${gender}Data`].slice();
+    const data: NameOccurrence[] = this[`${gender}Data`];
 
     // data = data.sort((d1: NameOccurrence, d2: NameOccurrence) =>
     //   this.d3Service.d3.descending(d1.both / d1.username, d2.both / d2.username));
@@ -111,7 +126,7 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     });
     formatedObject['autres'] /= total;
     firstNames.unshift('autres');
-    this[`${gender}Data`].push(others);
+    data.push(others);
 
     // Quick fix pour faire en sorte que les rectangles ne bougent pas
     // (La somme étant plus petite, e.g. 2.63% au lieu de 2.70% pour les femmes)
@@ -141,18 +156,18 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
             <strong>Les deux:</strong> ${this.d3Service.getFormattedNumber(nameData.both)} fois<br/>`;
   }
 
-  private initialize(): number {
+  private initialize(): void {
     // Set the dimensions of the canvas / graph
     const margin: Margin = { top: 30, right: 20, bottom: 30, left: 50 };
     const width = 400 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    this.chartProps.height = 400 - margin.top - margin.bottom;
 
     // Set the ranges
     this.chartProps.x = this.d3Service.d3.scaleBand().range([0, width]).round(0.05).padding(0.4);
-    this.chartProps.y = this.d3Service.d3.scaleLinear().range([height, 0]);
+    this.chartProps.y = this.d3Service.d3.scaleLinear().range([this.chartProps.height, 0]);
 
     this.chartProps.x.domain(['masculin', 'feminin']);
-    this.chartProps.y.domain([0, 0.05]);
+    this.chartProps.y.domain([0, 0.04]);
 
     this.chartProps.color = this.d3Service.d3.scaleOrdinal()
       .range([this.maleColors[this.maleColors.length - 1], this.femaleColors[this.femaleColors.length - 1]])
@@ -164,21 +179,19 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     this.svgElement = this.d3Service.d3.select(this.chartElement.nativeElement)
       .append('svg')
       .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+      .attr('height', this.chartProps.height + margin.top + margin.bottom)
       .append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    this.d3Service.createAxes(this.svgElement, this.chartProps.xAxis, width, height, null);
+    this.d3Service.createAxes(this.svgElement, this.chartProps.xAxis, width, this.chartProps.height, null);
 
     // Define the div for the tooltip
     this.tooltip = this.d3Service.d3.select(this.chartElement.nativeElement).append('div')
       .attr('class', 'tooltip')
       .style('opacity', 0);
-
-    return height;
   }
 
-  private createBarChart(height: number): void {
+  public createBarChart(): void {
     const bars = this.svgElement.selectAll('rect')
       .data(this.formatedInitialData)
       .enter()
@@ -195,7 +208,7 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
 
     this.svgElement.selectAll('.female, .male').transition()
       .duration(1000)
-      .attr('height', (d: GraphData) => height - this.chartProps.y(d.proportion));
+      .attr('height', (d: GraphData) => this.chartProps.height - this.chartProps.y(d.proportion));
 
     bars.append('text')
       .attr('class', 'label')
@@ -241,6 +254,19 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
   }
 
   private showTooltip(d: any, formatedData: any[]): void {
+    const rect = this.d3Service.d3.event.target.getBoundingClientRect();
+    const hostElem = this.chartElement.nativeElement.getBoundingClientRect();
+    const tooltip = document.getElementsByClassName('tooltip')[0].getBoundingClientRect();
+    this.tooltip.style('left', () => {
+      const offset = 24 / 2;
+      const x = rect.left + rect.width / 2 - tooltip.width / 2 - offset;
+      return `${x}px`;
+    }).style('top', () => {
+      const padding = 20;
+      const y = rect.top - hostElem.top - tooltip.height - padding;
+      return `${y}px`;
+    });
+
     this.tooltip.transition()
       .duration(200)
       .style('opacity', .9);
@@ -251,5 +277,34 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     this.tooltip.transition()
       .duration(500)
       .style('opacity', 0);
+  }
+
+  private initializeInput(): void {
+    this.searchField = new FormControl();
+    this.formGroup = this.fb.group({search: this.searchField});
+
+    this.searchResult$ = this.searchField.valueChanges.pipe(
+      map((term: string) => term.toLowerCase()),
+      debounceTime(400),
+      distinctUntilChanged(),
+      switchMap(term => this.searchInFiles(term))
+    );
+  }
+
+  private searchInFiles(term: string): Observable<string> {
+    let text = '';
+    const subject: BehaviorSubject<string> = new BehaviorSubject<string>(text);
+    if (term !== '') {
+      text = 'Votre prénom n\'apparaît pas<br/>dans les prénoms les plus égocentriques';
+      for (let i = 0; i < this.mixedData.length; i++) {
+        if (this.mixedData[i].name === term) {
+          text = `Parmi les prénoms les plus égocentriques,<br/>
+                  ${term.toUpperCase()} arrive en ${i + 1}${i === 0 ? 'ère' : 'eme'} position!`;
+          break;
+        }
+      }
+    }
+    subject.next(text);
+    return subject.asObservable();
   }
 }

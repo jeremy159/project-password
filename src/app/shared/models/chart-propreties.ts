@@ -4,4 +4,5 @@ export interface ChartPropreties {
   xAxis: d3.Axis<string>;
   yAxis: d3.Axis<number>;
   color: d3.ScaleOrdinal<string, string>;
+  height: number;
 }
