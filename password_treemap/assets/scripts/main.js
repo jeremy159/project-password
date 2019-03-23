@@ -81,12 +81,18 @@
       .on("click", d => transition(d.parent))
       .select("text")
       .text(d => name(d))
-      .attr("fill", d => {if(d.data.name !== "Catégories") return "#fff"})
+      .attr("fill", d => {if(d.data.name !== "catégories") return "#fff"})
     grandparent.datum(d)
         .select("rect")
         .attr("fill", d => {
-          if(d.data.name === "Catégories") return "#fff";
-          else return color(d.data.name)
+          var alt = d.data.name.match(/\((.*)\)/)
+          var name = ""
+          if (alt)
+            name = alt[1]
+          else
+            name = d.data.name
+          if(name === "catégories") return "#fff";
+          else return color(name)
         });        
 
     //Layout top
@@ -100,6 +106,9 @@
       .append("g");
     g.filter(d => d.children)
       .classed("children", true)
+      .classed("blink", (d)=> {
+        return d.parent.data.name != "catégories" && d.parent.data.name != "significations"
+      })
       .on("click", transition);
     //Sous-catégories
     g.selectAll(".child")

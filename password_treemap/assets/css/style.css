@@ -15,7 +15,14 @@ rect {
 rect.parent,
 .grandparent rect {
   stroke-width: 1px;
-  opacity: 1;
+}
+.blink {
+  animation: blinker 2s linear infinite;
+}
+@keyframes blinker {
+  50% {
+    opacity: 0.8;
+  }
 }
 .grandparent:hover rect {
   opacity: 0.5;
@@ -30,11 +37,11 @@ rect.parent,
 .children rect.parent {
 }
 .children:hover rect.child {
-  opacity: 1;
+  /*opacity: 1;
   stroke-width: 1px;*/
 }
 .children:hover rect.parent {
-  opacity: 0.2;
+  opacity: 0.8;
 }
 .legend {
   margin-bottom:8px !important;

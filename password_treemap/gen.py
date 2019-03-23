@@ -11,7 +11,7 @@ count = 1
 
 data = { "name": "catégories", "children": [] }
 
-meanings_name = 'meanings'
+meanings_name = 'significations'
 
 for file in files:
     if file != 'meanings.csv' and os.path.isfile(path + file):
@@ -23,27 +23,27 @@ for file in files:
                 children.append({'name': row[value], 'value': int(row[count])})
             data["children"].append({'name': name, 'children': children})
 
-with open(path + 'meanings.csv') as csvFile:
-    reader = csv.reader(csvFile)
-    children = []
-    for row in reader:
-        t = row[value].split(".")[0]
-        obj = row[value].split(".")[1]
+# with open(path + 'meanings.csv') as csvFile:
+#     reader = csv.reader(csvFile)
+#     children = []
+#     for row in reader:
+#         t = row[value].split(".")[0]
+#         obj = row[value].split(".")[1]
 
-        children_childrens = {'name': obj, 'value': int(row[count])}
+#         children_childrens = {'name': obj, 'value': int(row[count])}
 
-        hasType = False
-        for child in children:
-            hasType |= child['name'] == t
+#         hasType = False
+#         for child in children:
+#             hasType |= child['name'] == t
 
-        if not hasType:             
-            children.append({'name': t, 'children': [children_childrens]})
-        else:
-            for child in children:
-                if child['name'] == t:
-                    child['children'].append(children_childrens)
+#         if not hasType:             
+#             children.append({'name': t, 'children': [children_childrens]})
+#         else:
+#             for child in children:
+#                 if child['name'] == t:
+#                     child['children'].append(children_childrens)
 
-    data["children"].append({'name': meanings_name, 'children': children})
+#     data["children"].append({'name': meanings_name, 'children': children})
 
 # Tri par 'count'
 for child in data['children']:
