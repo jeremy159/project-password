@@ -254,14 +254,14 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
   }
 
   private showTooltip(d: any, formatedData: any[]): void {
+    const rect = this.d3Service.d3.event.target.getBoundingClientRect();
+    const hostElem = this.chartElement.nativeElement.getBoundingClientRect();
+    const tooltip = document.getElementsByClassName('tooltip')[0].getBoundingClientRect();
     this.tooltip.style('left', () => {
-      const tooltipWidth = 200;
-      const barCenter = this.chartProps.x.bandwidth() / 2;
-      return `${this.chartProps.x(formatedData[0].gender === 'female' ? 'feminin' : 'masculin') + barCenter + tooltipWidth / 2}px`;
+      const offset = 24 / 2;
+      const x = rect.left + rect.width / 2 - tooltip.width / 2 - offset;
+      return `${x}px`;
     }).style('top', () => {
-      const rect = this.d3Service.d3.event.target.getBoundingClientRect();
-      const hostElem = this.chartElement.nativeElement.getBoundingClientRect();
-      const tooltip = document.getElementsByClassName('tooltip')[0].getBoundingClientRect();
       const padding = 20;
       const y = rect.top - hostElem.top - tooltip.height - padding;
       return `${y}px`;
