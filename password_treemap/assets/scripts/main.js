@@ -3,16 +3,35 @@
 (async function(d3, localization) {
   "use strict";
 
-  var files = [
-    "./data/annees.csv",
-    "./data/brands.csv",
-    "./data/cities.csv",
-    "./data/countries.csv",
-    "./data/famous.csv",
-    "./data/names.csv",
-    "./data/shows.csv",
-    "./data/words.csv"
-  ];
+  var barChartMargin = {
+    top: 0,
+    right: 40,
+    bottom: 0,
+    left: 40
+  };
+  var barChartWidth = 300 - barChartMargin.left - barChartMargin.right;
+  var barChartHeight = 150 - barChartMargin.top - barChartMargin.bottom;
+
+  /***** Échelles utilisées *****/
+  var color = d3.scaleOrdinal();
+  var x = d3.scaleLinear().range([0, barChartWidth]);
+  var y = d3.scaleBand().range([0, barChartHeight]).padding(0.1);
+
+  var yAxis = d3.axisLeft(y);
+
+  /***** Création des éléments du diagramme à barres *****/
+  var barChartSvg = d3.select("#bar-chart")
+  .attr("width", barChartWidth + barChartMargin.left + barChartMargin.right)
+  .attr("height", barChartHeight + barChartMargin.top + barChartMargin.bottom);
+
+  var barChartGroup = barChartSvg.append("g")
+    .attr("transform", "translate(" + barChartMargin.left + "," + barChartMargin.top + ")");
+
+  var barChartBarsGroup = barChartGroup.append("g");
+  var barChartAxisGroup = barChartGroup.append("g")
+    .attr("class", "axis y");
+
+  //////////////////////////////////////////
 
   var margin = { top:30, right:0, bottom:20, left:0 };
   var width = 1000;
