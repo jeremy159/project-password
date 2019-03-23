@@ -4,7 +4,7 @@
   "use strict";
 
   var margin = { top:30, right:0, bottom:20, left:0 };
-  var width = 850;
+  var width = 900;
   var height = 650;
   var transitioning; 
   var formatNumber = d3.format(",");
