@@ -2,11 +2,18 @@
   max-width: 100%;
   overflow:auto;
 }
+h2 { 
+  font-family: "Open Sans",Helvetica,Arial,sans-serif;
+}
+.container {
+  margin-left: 15%;
+}
 text {
   pointer-events: none;
 }
 .grandparent text {
   font-weight: bold;
+  font-family: "Open Sans",Helvetica,Arial,sans-serif;
 }
 rect {
   stroke: #fff;
@@ -17,11 +24,11 @@ rect.parent,
   stroke-width: 1px;
 }
 .blink {
-  animation: blinker 2s linear infinite;
+  animation: blinker 1.5s linear infinite;
 }
 @keyframes blinker {
   50% {
-    opacity: 0.8;
+    opacity: 0.7;
   }
 }
 .grandparent:hover rect {
@@ -70,7 +77,7 @@ rect.parent,
     font-size: 102%;
     font-weight: bold;
     margin-top: 8px;
-    font-size:11px !important;
+    font-size:9px !important;
     color: #fff;
 }
 .textdiv p{
@@ -79,4 +86,29 @@ rect.parent,
   padding:0px;
   font-size:10px !important;
   color: #fff;
+}
+/***** SVG *****/
+.axis {
+  shape-rendering: crispEdges
+}
+
+.axis line {
+  display: none;
+}
+
+.axis path {
+  fill: none;
+  stroke: black;
+  shape-rendering: crispEdges;
+}
+
+.y.axis path {
+  fill: none;
+  stroke: black;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.label {
+  font-size: 10px;
 }

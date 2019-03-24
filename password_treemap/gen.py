@@ -4,7 +4,7 @@ path = './data/'
 files = os.listdir(path)
 
 SPLIT = 100
-DIVIDER =50
+DIVIDER = 50
 
 value = 0
 count = 1
