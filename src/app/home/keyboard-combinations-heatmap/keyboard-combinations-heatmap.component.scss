@@ -1,0 +1,14 @@
+:host ::ng-deep {
+    rect.key:hover {
+        cursor: pointer;
+    }
+
+    .barChartTitle {
+        color: black;
+        font-size: 20px;
+    }
+
+    g.yAxis .tick text {
+        font-size: 20px;
+    }
+}

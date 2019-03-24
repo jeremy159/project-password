@@ -13,7 +13,7 @@ export class ScrollToRefDirective {
     const nativeElement: HTMLElement = this.scrollRefService.scrollElement.nativeElement;
 
     if (nativeElement) {
-      nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      nativeElement.scrollIntoView({ behavior: 'smooth' });
     }
   }
 
