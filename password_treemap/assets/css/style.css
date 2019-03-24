@@ -2,6 +2,9 @@
   max-width: 100%;
   overflow:auto;
 }
+.container {
+  margin-left: 15%;
+}
 text {
   pointer-events: none;
 }
@@ -17,11 +20,11 @@ rect.parent,
   stroke-width: 1px;
 }
 .blink {
-  animation: blinker 2s linear infinite;
+  animation: blinker 1.5s linear infinite;
 }
 @keyframes blinker {
   50% {
-    opacity: 0.8;
+    opacity: 0.7;
   }
 }
 .grandparent:hover rect {

@@ -36,19 +36,22 @@
 
   /***** BARCHART *****/
   var barChartMargin = {
-    top: 0,
-    right: 40,
+    top: 25,
+    right: 0,
     bottom: 0,
-    left: 40
+    left: 30
   };
-  var barChartWidth = 300 - barChartMargin.left - barChartMargin.right;
-  var barChartHeight = 150 - barChartMargin.top - barChartMargin.bottom;
+  var barChartWidth = 200 - barChartMargin.left - barChartMargin.right;
+  var barChartHeight = 125 - barChartMargin.top - barChartMargin.bottom;
 
   /***** Création des éléments du diagramme à barres *****/
   var barChartSvg = d3.select("#bar-chart")
-    .attr("width", barChartWidth + barChartMargin.left + barChartMargin.right)
-    .attr("height", barChartHeight + barChartMargin.top + barChartMargin.bottom)
-    .attr("transform", `translate(${width + 50}, ${30})`)
+    .attr("width", barChartWidth)
+    .attr("height", barChartHeight)
+    .attr("transform", `translate(${width + barChartMargin.left}, ${barChartMargin.top})`)
+  barChartSvg.append("text")
+    .attr("transform", `translate(${0}, ${barChartMargin.top - 10})`)
+    .text("Top 5")
   
 
   var barChartGroup = barChartSvg.append("g")
@@ -112,8 +115,8 @@
     updateBarChart(d);
     d3.select("#bar-chart")
       .attr("visibility", () => {
-        if (d.data.name == 'catégories')
-          return 'hidden';
+        /*if (d.data.name == 'catégories')
+          return 'hidden';*/
         return 'visible';
       });
 
@@ -161,7 +164,7 @@
       .call(rect)
       .attr("class", "foreignobj")
       .append("xhtml:div")
-      .attr("dy", ".5em")
+      //.attr("dy", ".5em")
       .html(function (d) {
           return '' +
               '<p class="title"> ' + d.data.name + '</p>' +
@@ -287,6 +290,7 @@
     
     var data = d.children.map(x => x);
     data = data.filter((x) => {
+      if(d.data.name == 'catégories') return true
       return x.children === undefined
     })
     data = data.slice(0,5);
@@ -303,14 +307,11 @@
     barChartAxisGroup.call(yAxis); 
 
     var bars = barChartBarsGroup
-      .selectAll("g").remove().exit().data(data);
-    bars.select("rect")
-      .transition().duration(650)
-      .attr("width", d => x_bar(d.value));
+      .selectAll("g")
+      .remove()
+      .exit()
+      .data(data);
     
-
-    //bars = barChartBarsGroup.selectAll("g").remove().exit().data(data);
-    //enter
     bars.enter()
       .append("g")
       .append("rect")
@@ -330,9 +331,7 @@
       .attr("y", d => y_bar(d.data.name) + y_bar.bandwidth() / 2 + 4)
       .transition().duration(650)
       .attr("x", d => x_bar(d.value) + 3)
-      .text(d => formatNumber(d.value));
-
-    
+      .text(d => formatNumber(d.value));    
   }
 
 })(d3, localization);
