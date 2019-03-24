@@ -1,4 +1,4 @@
-import csv, os, json
+import csv, os, json, io
 
 path = './data/'
 files = os.listdir(path)
@@ -15,7 +15,7 @@ meanings_name = 'significations'
 
 for file in files:
     if file != 'meanings.csv' and os.path.isfile(path + file):
-        with open(path + file) as csvFile:
+        with io.open(path + file, encoding='utf-8') as csvFile:
             name = next(csvFile).split(',')[0]
             children = []
             reader = csv.reader(csvFile)
@@ -74,5 +74,5 @@ for child in data['children']:
     twenty(child)
 
 
-with open(f'data_{SPLIT}.json', 'w') as outfile:  
-    json.dump(data, outfile)
+with io.open(f'data_{SPLIT}.json', 'w', encoding='utf8') as outfile:  
+    json.dump(data, outfile, ensure_ascii=False)
