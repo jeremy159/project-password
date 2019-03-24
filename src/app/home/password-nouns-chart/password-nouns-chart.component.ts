@@ -1,15 +1,13 @@
-import { Component, ViewChild, ElementRef, AfterViewInit, OnInit, Input, ChangeDetectionStrategy } from '@angular/core';
-import { ScrollRefService } from 'src/app/core/services/scroll-ref.service';
+import { Component, ViewChild, ElementRef, OnInit, Input, ChangeDetectionStrategy } from '@angular/core';
 import { D3Service } from 'src/app/core/services/d3.service';
 import { NameOccurrence } from 'src/app/shared/models/name-occurrence';
 import { Margin } from 'src/app/shared/models/margin';
 import { ChartPropreties } from 'src/app/shared/models/chart-propreties';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
 import { Genders } from 'src/app/shared/models/genders';
-import d3Tip from 'd3-tip';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, switchMap, map, tap } from 'rxjs/operators';
-import { Observable, from, Subject, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 interface GraphData {
   gender: string;
@@ -33,10 +31,9 @@ interface SplitData {
   styleUrls: ['./password-nouns-chart.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
+export class PasswordNounsChartComponent implements OnInit {
 
   @Input() private data: [NameOccurrence[], NameOccurrence[], Genders[]];
-  @ViewChild('firstChart') private scrollReference: ElementRef;
   @ViewChild('chart') private chartElement: ElementRef;
   private femaleData: NameOccurrence[];
   private maleData: NameOccurrence[];
@@ -56,8 +53,7 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
   public formGroup: FormGroup;
   public searchResult$: Observable<string>;
 
-  constructor(private scrollRefService: ScrollRefService,
-              private d3Service: D3Service,
+  constructor(private d3Service: D3Service,
               private preProcessService: PreProcessService,
               private fb: FormBuilder) { }
 
@@ -77,10 +73,6 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     // this.createBarChart();
   }
 
-  public ngAfterViewInit(): void {
-    this.scrollRefService.scrollElement = this.scrollReference;
-  }
-
   private formatData(): void {
     this.formatInitialData();
     this.formatSplitingData('female', this.femaleCount);
@@ -88,24 +80,24 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
   }
 
   private formatInitialData(): void {
-    this.femaleCount = this.d3Service.d3.sum(this.femaleData, (f: NameOccurrence) => f.both);
-    this.maleCount = this.d3Service.d3.sum(this.maleData, (f: NameOccurrence) => f.both);
+    this.femaleCount = this.d3Service.d3.sum(this.femaleData, (f: NameOccurrence) => f.both / f.username);
+    this.maleCount = this.d3Service.d3.sum(this.maleData, (f: NameOccurrence) => f.both / f.username);
     this.formatedInitialData = [
-      {gender: 'masculin', proportion: this.maleCount / this.genders[0].male},
-      {gender: 'feminin', proportion: this.femaleCount / this.genders[0].female}
+      {gender: 'masculin', proportion: this.maleCount},
+      {gender: 'feminin', proportion: this.femaleCount}
     ];
     this.mixedData = this.maleData.slice().concat(this.femaleData.slice());
-    // this.mixedData = this.mixedData.sort((d1: NameOccurrence, d2: NameOccurrence) =>
-    //   this.d3Service.d3.descending(d1.both / d1.username, d2.both / d2.username));
-    this.preProcessService.sortData(this.mixedData, 'both', false);
+    this.mixedData = this.mixedData.sort((d1: NameOccurrence, d2: NameOccurrence) =>
+      this.d3Service.d3.descending(d1.both / d1.username, d2.both / d2.username));
+    // this.preProcessService.sortData(this.mixedData, 'both', false);
   }
 
   private formatSplitingData(gender: string, count: number): void {
-    const data: NameOccurrence[] = this[`${gender}Data`];
+    let data: NameOccurrence[] = this[`${gender}Data`];
 
-    // data = data.sort((d1: NameOccurrence, d2: NameOccurrence) =>
-    //   this.d3Service.d3.descending(d1.both / d1.username, d2.both / d2.username));
-    this.preProcessService.sortData(data, 'both', false);
+    data = data.sort((d1: NameOccurrence, d2: NameOccurrence) =>
+      this.d3Service.d3.descending(d1.both / d1.username, d2.both / d2.username));
+    // this.preProcessService.sortData(data, 'both', false);
 
     const firstNames = [];
     const firstNOccurrences = 5;
@@ -114,29 +106,30 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     const others: NameOccurrence = {name: 'autres', username: 0, password: 0, both: 0};
     data.forEach((d: NameOccurrence, index: number) => {
       if (index < firstNOccurrences) {
-        formatedObject[d.name] = d.both / total;
+        formatedObject[d.name] = d.both / d.username;
         firstNames.push(d.name);
       }
       else {
-        formatedObject['autres'] += d.both;
+        formatedObject['autres'] += d.both / d.username;
         others.username += d.username;
         others.password += d.password;
         others.both += d.both;
       }
     });
-    formatedObject['autres'] /= total;
+    // formatedObject['autres'] /= total;
+    // formatedObject['autres'] = others.both / others.username;
     firstNames.unshift('autres');
     data.push(others);
 
     // Quick fix pour faire en sorte que les rectangles ne bougent pas
     // (La somme étant plus petite, e.g. 2.63% au lieu de 2.70% pour les femmes)
-    let sum = 0;
-    for (const k in formatedObject) {
-      if (k !== 'gender') {
-        sum += formatedObject[k];
-      }
-    }
-    formatedObject['autres'] += count / this.genders[0][gender] - sum;
+    // let sum = 0;
+    // for (const k in formatedObject) {
+    //   if (k !== 'gender') {
+    //     sum += formatedObject[k];
+    //   }
+    // }
+    // formatedObject['autres'] += count / this.genders[0][gender] - sum;
     this.formatedSplitData[gender] = {object: [formatedObject], keys: firstNames};
   }
 
@@ -150,7 +143,7 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     }
 
     return `<strong>Prénom:</strong> ${name}<br/>
-            <strong>Proportion:</strong> ${this.d3Service.getFormattedPercent(nameData.both / this[`${gender}Count`])}<br/>
+            <strong>Proportion:</strong> ${this.d3Service.getFormattedPercent(nameData.both / nameData.username / this[`${gender}Count`])}<br/>
             <strong>Nom d'usager:</strong> ${this.d3Service.getFormattedNumber(nameData.username)} fois<br/>
             <strong>Mot de passe:</strong> ${this.d3Service.getFormattedNumber(nameData.password)} fois<br/>
             <strong>Les deux:</strong> ${this.d3Service.getFormattedNumber(nameData.both)} fois<br/>`;
@@ -163,11 +156,11 @@ export class PasswordNounsChartComponent implements OnInit, AfterViewInit {
     this.chartProps.height = 400 - margin.top - margin.bottom;
 
     // Set the ranges
-    this.chartProps.x = this.d3Service.d3.scaleBand().range([0, width]).round(0.05).padding(0.4);
+    this.chartProps.x = this.d3Service.d3.scaleBand().range([0, width]).round(0.05).padding(0.2);
     this.chartProps.y = this.d3Service.d3.scaleLinear().range([this.chartProps.height, 0]);
 
     this.chartProps.x.domain(['masculin', 'feminin']);
-    this.chartProps.y.domain([0, 0.04]);
+    this.chartProps.y.domain([0, Math.ceil(this.d3Service.d3.max([this.femaleCount, this.maleCount]))]);
 
     this.chartProps.color = this.d3Service.d3.scaleOrdinal()
       .range([this.maleColors[this.maleColors.length - 1], this.femaleColors[this.femaleColors.length - 1]])

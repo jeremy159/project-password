@@ -8,12 +8,14 @@ import { TopPageComponent } from './top-page/top-page.component';
 import { PasswordNounsChartComponent } from './password-nouns-chart/password-nouns-chart.component';
 import { SharedModule } from '../shared/shared.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { KeyboardCombinationsHeatmapComponent } from './keyboard-combinations-heatmap/keyboard-combinations-heatmap.component';
 
 @NgModule({
   declarations: [
     HomeComponent,
     TopPageComponent,
-    PasswordNounsChartComponent
+    PasswordNounsChartComponent,
+    KeyboardCombinationsHeatmapComponent
   ],
   imports: [
     CommonModule,

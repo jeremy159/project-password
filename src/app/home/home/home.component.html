@@ -1,4 +1,8 @@
 <pp-top-page></pp-top-page>
+<pp-keyboard-combinations-heatmap 
+    *ngIf="keyboardHeatMapData$ | async as keyboardHeatMapData"
+    [data]="keyboardHeatMapData">
+</pp-keyboard-combinations-heatmap>
 <!-- <div class="component-container" (ppDefearLoad)="initializeBarChartComponent()"> -->
     <pp-password-nouns-chart
         *ngIf="passwordNounsChartData$ | async as passwordNounsChartData"
