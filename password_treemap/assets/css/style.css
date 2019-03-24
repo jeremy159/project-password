@@ -2,6 +2,9 @@
   max-width: 100%;
   overflow:auto;
 }
+h2 { 
+  font-family: "Open Sans",Helvetica,Arial,sans-serif;
+}
 .container {
   margin-left: 15%;
 }
@@ -10,6 +13,7 @@ text {
 }
 .grandparent text {
   font-weight: bold;
+  font-family: "Open Sans",Helvetica,Arial,sans-serif;
 }
 rect {
   stroke: #fff;
