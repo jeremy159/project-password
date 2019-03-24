@@ -89,7 +89,6 @@ export class PasswordNounsChartComponent implements OnInit {
     this.mixedData = this.maleData.slice().concat(this.femaleData.slice());
     this.mixedData = this.mixedData.sort((d1: NameOccurrence, d2: NameOccurrence) =>
       this.d3Service.d3.descending(d1.both / d1.username, d2.both / d2.username));
-    // this.preProcessService.sortData(this.mixedData, 'both', false);
   }
 
   private formatSplitingData(gender: string, count: number): void {
@@ -97,53 +96,26 @@ export class PasswordNounsChartComponent implements OnInit {
 
     data = data.sort((d1: NameOccurrence, d2: NameOccurrence) =>
       this.d3Service.d3.descending(d1.both / d1.username, d2.both / d2.username));
-    // this.preProcessService.sortData(data, 'both', false);
 
     const firstNames = [];
-    const firstNOccurrences = 5;
-    const total = count + this.genders[0][gender];
+    const firstNOccurrences = 7;
+    const total = count;
     const formatedObject = { gender, autres: 0 };
-    const others: NameOccurrence = {name: 'autres', username: 0, password: 0, both: 0};
     data.forEach((d: NameOccurrence, index: number) => {
       if (index < firstNOccurrences) {
-        formatedObject[d.name] = d.both / d.username;
+        formatedObject[d.name] = (d.both / d.username / total) * 7 * total;
         firstNames.push(d.name);
       }
-      else {
-        formatedObject['autres'] += d.both / d.username;
-        others.username += d.username;
-        others.password += d.password;
-        others.both += d.both;
-      }
     });
-    // formatedObject['autres'] /= total;
-    // formatedObject['autres'] = others.both / others.username;
-    firstNames.unshift('autres');
-    data.push(others);
 
-    // Quick fix pour faire en sorte que les rectangles ne bougent pas
-    // (La somme étant plus petite, e.g. 2.63% au lieu de 2.70% pour les femmes)
-    // let sum = 0;
-    // for (const k in formatedObject) {
-    //   if (k !== 'gender') {
-    //     sum += formatedObject[k];
-    //   }
-    // }
-    // formatedObject['autres'] += count / this.genders[0][gender] - sum;
     this.formatedSplitData[gender] = {object: [formatedObject], keys: firstNames};
   }
 
   private getTooltipText(name: string, gender: string): string {
-    let nameData: NameOccurrence;
-    if (gender === 'female') {
-      nameData = this.femaleData.find((f: NameOccurrence) => f.name === name);
-    }
-    else {
-      nameData = this.maleData.find((m: NameOccurrence) => m.name === name);
-    }
+    const nameData: NameOccurrence = this[`${gender}Data`].find((f: NameOccurrence) => f.name === name);
 
     return `<strong>Prénom:</strong> ${name}<br/>
-            <strong>Proportion:</strong> ${this.d3Service.getFormattedPercent(nameData.both / nameData.username / this[`${gender}Count`])}<br/>
+            <strong>Proportion:</strong> ${this.d3Service.getFormattedPercent(nameData.both / nameData.username)}<br/>
             <strong>Nom d'usager:</strong> ${this.d3Service.getFormattedNumber(nameData.username)} fois<br/>
             <strong>Mot de passe:</strong> ${this.d3Service.getFormattedNumber(nameData.password)} fois<br/>
             <strong>Les deux:</strong> ${this.d3Service.getFormattedNumber(nameData.both)} fois<br/>`;
@@ -202,12 +174,6 @@ export class PasswordNounsChartComponent implements OnInit {
     this.svgElement.selectAll('.female, .male').transition()
       .duration(1000)
       .attr('height', (d: GraphData) => this.chartProps.height - this.chartProps.y(d.proportion));
-
-    bars.append('text')
-      .attr('class', 'label')
-      .attr('x', (d: GraphData) => this.chartProps.x(d.gender) + this.chartProps.x.bandwidth() / 2)
-      .attr('y', (d: GraphData) => this.chartProps.y(d.proportion) - 5)
-      .text((d: GraphData) => this.d3Service.getFormattedPercent(d.proportion));
   }
 
   private splitBar(gender: string): void {
