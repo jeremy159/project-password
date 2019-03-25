@@ -1,18 +1,53 @@
 rect.bordered {
-    stroke: #E6E6E6;
-    stroke-width:1px; 
-  }
+  stroke: #E6E6E6;
+  stroke-width:1px;
+}
 
-  text.mono {
-    font-size: 9pt;
-    font-family: Consolas, courier;
-    /*fill: #aaa;*/
-  }
+rect.bordered:hover {
+  opacity: 0.7;
+}
 
-  text.axis-workweek {
-    fill: #000;
-  }
+text.mono {
+  font-size: 9pt;
+  font-family: Consolas, courier;
+  /*fill: #aaa;*/
+}
 
-  text.axis-worktime {
-    fill: #000;
-  }
+text.axis-workweek {
+  fill: #000;
+}
+
+text.axis-worktime {
+  fill: #000;
+}
+
+.d3-tip {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #efefef;
+  border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25B2";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: -7px;
+  left: 0;
+}
