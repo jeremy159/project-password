@@ -4,6 +4,7 @@ import { Observable, forkJoin } from 'rxjs';
 import { NameOccurrence } from 'src/app/shared/models/name-occurrence';
 import { Genders } from 'src/app/shared/models/genders';
 import { KeyboardCombination } from 'src/app/shared/models/keyboard-combination';
+import { PasswordTreemap } from 'src/app/shared/models/password-treemap';
 
 @Component({
   selector: 'pp-home',
@@ -14,16 +15,22 @@ export class HomeComponent implements OnInit {
 
   public passwordNounsChartData$: Observable<[NameOccurrence[], NameOccurrence[], Genders]>;
   public keyboardHeatMapData$: Observable<KeyboardCombination[]>;
+  public passwordTreemapData$: Observable<PasswordTreemap>;
 
   constructor(private restApiService: RestAPIService) { }
 
   public ngOnInit(): void {
     this.initializeKeyboardCombinaisonsComponent();
+    this.initializePasswordTreemapComponent();
     this.initializeBarChartComponent();
   }
 
   public initializeKeyboardCombinaisonsComponent(): void {
     this.keyboardHeatMapData$ = this.restApiService.getRequest<KeyboardCombination[]>('allCombinations.csv', true);
+  }
+
+  public initializePasswordTreemapComponent(): void {
+    this.passwordTreemapData$ = this.restApiService.getRequest<PasswordTreemap>('data_100.json', true, false);
   }
 
   public initializeBarChartComponent(): void {

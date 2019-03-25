@@ -10,7 +10,6 @@ interface ChartPropreties {
   xAxis: d3.Axis<string>;
   yAxis: d3.Axis<number>;
   color: d3.ScaleOrdinal<number, string>;
-  height: number;
 }
 
 @Component({
@@ -25,7 +24,7 @@ export class KeyboardCombinationsHeatmapComponent implements OnInit, AfterViewIn
   @ViewChild('heatmap') private heatmapElement: ElementRef;
   @Input() private data: KeyboardCombination[];
   private svgElement: any;
-  private chartProps: ChartPropreties = {x: undefined, y: undefined, xAxis: undefined, yAxis: undefined, color: undefined, height: 0};
+  private chartProps: ChartPropreties = {x: undefined, y: undefined, xAxis: undefined, yAxis: undefined, color: undefined};
   private keyboard: string[][];
   private alphabet: string[];
   private matrix: any;
@@ -99,7 +98,7 @@ export class KeyboardCombinationsHeatmapComponent implements OnInit, AfterViewIn
     /* AXES */
     const barChartHeight = 200;
     const barChartLength = 300;
-    const keyboardWidth = 1500;
+    const keyboardWidth = 950;
     const keyboardHeight = 400;
 
     this.chartProps.x = this.d3Service.d3.scaleLinear().range([0, barChartLength]);
