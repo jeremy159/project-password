@@ -9,13 +9,15 @@ import { PasswordNounsChartComponent } from './password-nouns-chart/password-nou
 import { SharedModule } from '../shared/shared.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { KeyboardCombinationsHeatmapComponent } from './keyboard-combinations-heatmap/keyboard-combinations-heatmap.component';
+import { PasswordTreemapComponent } from './password-treemap/password-treemap.component';
 
 @NgModule({
   declarations: [
     HomeComponent,
     TopPageComponent,
     PasswordNounsChartComponent,
-    KeyboardCombinationsHeatmapComponent
+    KeyboardCombinationsHeatmapComponent,
+    PasswordTreemapComponent
   ],
   imports: [
     CommonModule,

@@ -3,9 +3,11 @@
     *ngIf="keyboardHeatMapData$ | async as keyboardHeatMapData"
     [data]="keyboardHeatMapData">
 </pp-keyboard-combinations-heatmap>
-<!-- <div class="component-container" (ppDefearLoad)="initializeBarChartComponent()"> -->
-    <pp-password-nouns-chart
-        *ngIf="passwordNounsChartData$ | async as passwordNounsChartData"
-        [data]="passwordNounsChartData">
-    </pp-password-nouns-chart>
-<!-- </div> -->
+<pp-password-treemap
+    *ngIf="passwordTreemapData$ | async as passwordTreemapData"
+    [data]="passwordTreemapData">
+</pp-password-treemap>
+<pp-password-nouns-chart
+    *ngIf="passwordNounsChartData$ | async as passwordNounsChartData"
+    [data]="passwordNounsChartData">
+</pp-password-nouns-chart>

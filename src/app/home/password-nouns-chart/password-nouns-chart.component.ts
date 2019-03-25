@@ -2,12 +2,20 @@ import { Component, ViewChild, ElementRef, OnInit, Input, ChangeDetectionStrateg
 import { D3Service } from 'src/app/core/services/d3.service';
 import { NameOccurrence } from 'src/app/shared/models/name-occurrence';
 import { Margin } from 'src/app/shared/models/margin';
-import { ChartPropreties } from 'src/app/shared/models/chart-propreties';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
 import { Genders } from 'src/app/shared/models/genders';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, switchMap, map, tap } from 'rxjs/operators';
 import { Observable, BehaviorSubject } from 'rxjs';
+
+interface ChartPropreties {
+  x: d3.ScaleBand<string>;
+  y: d3.ScaleLinear<number, number>;
+  xAxis: d3.Axis<string>;
+  yAxis: d3.Axis<number>;
+  color: d3.ScaleOrdinal<string, string>;
+  height: number;
+}
 
 interface GraphData {
   gender: string;
@@ -70,7 +78,7 @@ export class PasswordNounsChartComponent implements OnInit {
 
     this.formatData();
     this.initialize();
-    // this.createBarChart();
+    this.createBarChart();
   }
 
   private formatData(): void {
