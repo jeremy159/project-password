@@ -83,7 +83,7 @@ export class PasswordTreemapComponent implements OnInit {
       .attr('id', 'clip')
       .append('rect')
       .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.bottom + margin.top);
+      .attr('height', height + margin.top);
 
     // Treemap
     this.treemapSvg = this.d3Service.d3.select(this.treemapElement.nativeElement)
@@ -221,8 +221,9 @@ export class PasswordTreemapComponent implements OnInit {
       return;
     }
     this.transitioning = true;
+    const previousG1 = this.g1;
     const g2 = this.display(node),
-        t1 = this.g1.transition().duration(650),
+        t1 = previousG1.transition().duration(650),
         t2 = g2.transition().duration(650);
     // Update the domain only after entering new elements.
     this.treemapProps.x.domain([node.x0, node.x1]);
@@ -253,11 +254,8 @@ export class PasswordTreemapComponent implements OnInit {
     /* added */
     // Remove the old node when the transition is finished.
     const _this = this;
-    t1.on('end.remove', () => {
-        // this.remove();
-        this.treemapSvg.selectAll('.depth').filter((d, i, list) => {
-          return navigationBar ? i === list.length - 1 : i === 0;
-        }).remove();
+    t1.on('end.remove', function() {
+        this.remove();
         _this.transitioning = false;
     });
   }
