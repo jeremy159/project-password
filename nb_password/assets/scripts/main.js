@@ -17,8 +17,8 @@
     const colorScaleLog = d3.scaleLog().domain(domain).range(colors);
     var format = d3.format(",");
     var tip = d3.tip().attr('class', 'd3-tip').html(d => format(d.value));
-    var margin = { top: 100, right:100, bottom:50, left:100 };
-    var width = 1200 + margin.left + margin.right;
+    var margin = { top: 100, right:0, bottom:50, left:100 };
+    var width = 1300 + margin.left + margin.right;
     var height = 300 + margin.top + margin.bottom;
 
     var SVG = {
@@ -28,22 +28,21 @@
         left: margin.left
     }
     var Legend = {
-        top: SVG.top + 0,
+        top: SVG.top,
         right: SVG.right,
-        bottom: SVG.bottom + 0,
+        bottom: SVG.bottom,
         left: SVG.left,
         barHeight: (height - SVG.top - margin.bottom)/(domain.length),
         barWidth: 15
     }
     var Heatmap = {
-        barHeight: 55,
-        barWidth: 10,
-        top: Legend.top + Legend.barHeight*domain.length/2 - 45/2,
-        right: Legend.right,
+        top: Legend.top + Legend.barHeight*domain.length/2 - 55/2,
+        right: SVG.right + 50,
         bottom: Legend.bottom,
         left: Legend.left + 150,
+        barHeight: 55,
+        barWidth: 0 //Est utilisé plus bas
     }
-    // N'est pas dans le SVG!
     var Buttons = {
         top: Heatmap.top - 40,
         right: 0,
@@ -51,13 +50,21 @@
         left:Heatmap.left,
         buttonWidth:75,
         buttonHeight: 30,
-        space: 15
+        space: 7
     }
     var Cracked = {
         top: Heatmap.top + Heatmap.barHeight + 50,
         right: 0,
         bottom: 0,
-        left: Heatmap.left
+        left: Heatmap.left,
+        animate: {
+            position: {
+                top: 0,
+                right: 0,
+                botton: 0,
+                left: 0
+            }
+        }
     }
 
     //heatmap svg
@@ -76,7 +83,7 @@
         .attr("class", "button")
         .attr("rx", 5)
         .attr("ry", 5)
-        .attr("transform", (d,i) => `translate(${i*(Buttons.buttonWidth + 15)}, ${0})`)
+        .attr("transform", (d,i) => `translate(${i*(Buttons.buttonWidth + Buttons.space)}, ${0})`)
         .attr("width", Buttons.buttonWidth)
         .attr("height", Buttons.buttonHeight);
     buttonGroup.selectAll('text')
@@ -91,7 +98,20 @@
     var crackedGroup = svg.append("g")
         .attr("id", "cracked")
         .attr("transform", (d,i) => `translate(${Cracked.left}, ${Cracked.top})`);
-    crackedGroup.append('text');
+    crackedGroup.append('text')
+        .attr("id", "count")
+        .attr("transform", (d,i) => `translate(${Cracked.animate.position.left}, ${Cracked.animate.position.top + 50})`);
+    crackedGroup.append('rect')
+        .attr("class", "button")
+        .attr("width", Buttons.buttonWidth + 30)
+        .attr("height", Buttons.buttonHeight)
+        //.attr("transform", (d,i) => `translate(${Cracked.animate.position.left}, ${Cracked.animate.position.top})`);
+    crackedGroup.append("text")
+        .attr("id", "buttonText")
+        .attr("transform", (d,i) => `translate(${Cracked.animate.position.left + (Buttons.buttonWidth+30)/2}, ${Cracked.animate.position.top + Buttons.buttonHeight/2 + 4})`)
+        .attr("text-anchor", "middle")
+        .attr("pointer-events", "none")
+        .text("Animer")
 
     var heatmapGroup = svg.append("g")
         .attr("id", "heatmap")
@@ -144,47 +164,80 @@
             .text(d => unit)
             .attr("transform", (d, i) => `translate(${0}, ${-15})`)*/
     }
-    
-    var heatmap = function(data, unit) {        
-        // Log Scale
 
-        //Suppression des rectangles
-        heatmapGroup.selectAll(".bordered").remove();
+    var bars;
+    var timeouts = []
 
-        // update heatmap 1D
-        var cards = heatmapGroup.selectAll(".bar").data(data);
-        //Mise à jour des unités
-        setunits(data, unit)
+    var clearTimeouts = function() {
+        timeouts.forEach(t => {
+            clearTimeout(t)
+        });
+    }
 
+    var isAnimating = false;
+    var animate = function(data, unit) {
+
+        isAnimating = true;
+        clearTimeouts();
         // Mise à jour des barres
         var c = 0
-        cards.enter().append("rect")
-            .attr("transform", (d, i) => `translate(${(Heatmap.barWidth / 2) + i*Heatmap.barWidth - 5}, ${0}) rotate(0)`)
+        bars.enter().append("rect")
+            .attr("transform", (d, i) => `translate(${i*Heatmap.barWidth}, ${0}) rotate(0)`)
             .attr("class", "bordered")
             .attr("width", Heatmap.barWidth)
             .attr("height", Heatmap.barHeight) 
             .on('mouseover', tip.show)
             .on('mouseout', tip.hide)
             .style("fill", colorScaleLog(1))
-            /*.transition().duration((d, i) => 300)
+            .transition().duration((d, i) => 300)
             .delay((d,i) => {
                 var delay = i*100;
-                setTimeout(() => {
+                timeouts.push(setTimeout(() => {
                     c += d.value;
-                    crackedGroup.select('text').text(d => `Nombre de mot de passe déchiffré : ${format(c)}`)
-                    //count.html(format(c) + " mots de passes décryptés");
-                }, delay);
+                    crackedGroup.select('#count').text(d => `Nombre de mot de passe déchiffré : ${format(c)} après ${i} ${unit}`)
+                    if(i == data.length) isAnimating = false;
+                }, delay));
                 return delay;
-            })*/
+            })
             .style("fill", d => {
                 return colorScaleLog(d.value)
             })
         heatmapGroup.call(tip);
-    };
-
-    var animate = function(data, unit) {
-
     }
+    
+    var heatmap = function(data, unit) {
+
+        clearTimeouts();
+        isAnimating = false;
+        var MaxBarWidth = 20;
+        var space = (width - Heatmap.left - Heatmap.right);
+
+        if(space/data.length > MaxBarWidth)
+            Heatmap.barWidth = MaxBarWidth;
+        else
+            Heatmap.barWidth = space/data.length;
+
+        //Suppression des rectangles
+        heatmapGroup.selectAll(".bordered").remove();
+
+        // update heatmap 1D
+        bars = heatmapGroup.selectAll(".bar").data(data);
+        //Mise à jour des unités
+        setunits(data, unit)
+
+        bars.enter().append("rect")
+            .attr("transform", (d, i) => `translate(${i*Heatmap.barWidth}, ${0}) rotate(0)`)
+            .attr("class", "bordered")
+            .attr("width", Heatmap.barWidth)
+            .attr("height", Heatmap.barHeight) 
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide)
+            .style("fill", d => {
+                return colorScaleLog(d.value)
+            });
+        crackedGroup.select('#count').text(d => `Nombre de mot de passe déchiffré : ${format(d3.sum(data, d => d.value))} après ${data.length-1} ${unit}`)
+        heatmapGroup.call(tip);
+    };
 
     var data_init = 'seconds';
     buttonGroup.selectAll('.button')
@@ -192,17 +245,33 @@
         .attr('class', "button selected");
     heatmap(json.data[data_init], data_init);
 
+    var lastSelection = data_init;
     buttonGroup.selectAll('.button')
         .on("click", d => {
+            lastSelection = d;
             buttonGroup.selectAll('.button')
                 .attr('class', e => {
                     if(d == e) return "button selected"
                     else return "button"
                 })
-
             heatmap(json.data[d], d)
         });
 
+    crackedGroup.select('.button')
+        .on("click", function() {
+            if(isAnimating) {
+                clearTimeouts();                
+                heatmap(json.data[lastSelection], lastSelection);
+                isAnimating = false;
+                crackedGroup.select("#buttonText")
+                    .text("Animer");
+            }
+            else {
+                animate(json.data[lastSelection], lastSelection);
+                crackedGroup.select("#buttonText")
+                    .text("Arrêter l'animation");
+            }
+        });
 
     
 
