@@ -43,7 +43,7 @@ export class DiversityDonutComponent implements OnInit {
   @Input() private dada: Diversity[];
   @ViewChild('donut') private donutElement: ElementRef;
   private svgElement: any;
-  private donutProps: DonutPropreties = {pie: undefined, arc: undefined, innerRadius: 0, outerRadius: 0, donutXPos: 0};
+  private donutProps: DonutPropreties = {pie: undefined, arc: undefined, innerRadius: 200, outerRadius: 300, donutXPos: 400};
   private repartition: number[] = [];
   private repartition_tags: number[] = [];
   private repartition_matrix: number[][] = [[], [], [], []];
@@ -121,7 +121,6 @@ export class DiversityDonutComponent implements OnInit {
 
   private initialize(): void {
     /* SVG ELEMENT */
-
     const width = 1000;
     const height = 650;
 
@@ -131,10 +130,6 @@ export class DiversityDonutComponent implements OnInit {
       .attr('height', height);
 
     /* INITIALISATION DU DONUT ET DE LA LÉGENDE */
-    this.donutProps.outerRadius = 300;
-    this.donutProps.innerRadius = 200;
-    this.donutProps.donutXPos = 400;
-
     this.donutProps.pie = this.d3Service.d3.pie();
 
     this.donutProps.arc = this.d3Service.d3.arc()

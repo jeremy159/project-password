@@ -30,7 +30,7 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
   private svgNumbersElement: any;
   private svgSpecialcharactersElement: any;
   private tooltip: any;
-  private heatmapProps: HeatmapPropreties = {color: undefined, keyWidth: 0, keyHeight: 0, keyboardX: 0, keyboardY: 0};
+  private heatmapProps: HeatmapPropreties = {color: undefined, keyWidth: 40, keyHeight: 40, keyboardX: 50, keyboardY: 140};
   private keyboard: string[][];
   private lettersMatrix: KeyboardOccurrence[][];
   private numbersMatrix: KeyboardOccurrence[][];
@@ -115,10 +115,6 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
   }
 
   private initialize(): void {
-    this.heatmapProps.keyHeight = 40;
-    this.heatmapProps.keyWidth = 40;
-    this.heatmapProps.keyboardX = 50;
-    this.heatmapProps.keyboardY = 140;
     const keyboardHeight = 350;
     const keyboardWidth = 620;
 

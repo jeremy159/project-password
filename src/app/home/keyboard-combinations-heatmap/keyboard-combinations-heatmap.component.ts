@@ -4,6 +4,13 @@ import { KeyboardCombination } from 'src/app/shared/models/keyboard-combination'
 import { D3Service } from 'src/app/core/services/d3.service';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
 
+interface HeatmapPropreties {
+  xKey: number;
+  yKey: number;
+  keyWidth: number;
+  keyHeight: number;
+}
+
 interface ChartPropreties {
   x: d3.ScaleLinear<number, number>;
   y: d3.ScaleBand<string>;
@@ -28,9 +35,8 @@ export class KeyboardCombinationsHeatmapComponent implements OnInit, AfterViewIn
   private keyboard: string[][];
   private alphabet: string[];
   private matrix: any;
-  private keyboardProps:  {keyWidth: number, keyHeight: number, xKey: number, yKey: number} =
-                          {keyWidth: 40, keyHeight: 40, yKey: 150, xKey: 125};
-  private barChartPos: {x: number, y: number} = {x: 625, y: 135};
+  private keyboardProps: HeatmapPropreties = {keyWidth: 40, keyHeight: 40, yKey: 50, xKey: 50};
+  private barChartPos: {x: number, y: number} = {x: 550, y: 60};
 
   constructor(private scrollRefService: ScrollRefService,
               private d3Service: D3Service,
@@ -98,8 +104,8 @@ export class KeyboardCombinationsHeatmapComponent implements OnInit, AfterViewIn
     /* AXES */
     const barChartHeight = 200;
     const barChartLength = 300;
-    const keyboardWidth = 950;
-    const keyboardHeight = 400;
+    const totalWidth = 900;
+    const totalHeight = 300;
 
     this.chartProps.x = this.d3Service.d3.scaleLinear().range([0, barChartLength]);
 
@@ -110,8 +116,8 @@ export class KeyboardCombinationsHeatmapComponent implements OnInit, AfterViewIn
 
     this.svgElement = this.d3Service.d3.select(this.heatmapElement.nativeElement)
       .append('svg')
-      .attr('width', keyboardWidth)
-      .attr('height', keyboardHeight);
+      .attr('width', totalWidth)
+      .attr('height', totalHeight);
   }
 
   /* CALCUL DES DOMAINES */
