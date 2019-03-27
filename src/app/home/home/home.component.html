@@ -1,7 +1,11 @@
 <pp-top-page></pp-top-page>
+<pp-keyboard-occurrences-heatmap
+    *ngIf="keyboardOccurrencesHeatmapData$ | async as keyboardOccurrencesHeatmapData"
+    [data]="keyboardOccurrencesHeatmapData">
+</pp-keyboard-occurrences-heatmap>
 <pp-keyboard-combinations-heatmap 
-    *ngIf="keyboardHeatMapData$ | async as keyboardHeatMapData"
-    [data]="keyboardHeatMapData">
+    *ngIf="keyboardCombinationsHeatmapData$ | async as keyboardCombinationsHeatmapData"
+    [data]="keyboardCombinationsHeatmapData">
 </pp-keyboard-combinations-heatmap>
 <pp-password-treemap
     *ngIf="passwordTreemapData$ | async as passwordTreemapData"

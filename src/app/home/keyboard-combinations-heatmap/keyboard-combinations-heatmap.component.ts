@@ -169,41 +169,44 @@ export class KeyboardCombinationsHeatmapComponent implements OnInit, AfterViewIn
       this.d3Service.d3.select(`#rowText${i}`).remove();
     }
 
+    const _this = this;
     this.svgElement.selectAll('rect.key')
       .data(this.keyboard)
       .enter()
       .append('g')
       .attr('id', (d: string[], i: number) => `row${i}`)
-      .each((d: string[], i: number) => {
-        this.d3Service.d3.select(`#row${i}`)
+      .each(function(d: string[], i: number) {
+        _this.d3Service.d3.select(this)
         .selectAll('rect')
         .data(d)
         .enter()
         .append('rect')
         .attr('class', 'key')
-        .attr('width', (k: string) => k === character ? this.keyboardProps.keyWidth - 3 : this.keyboardProps.keyWidth)
-        .attr('height', (k: string) => k === character ? this.keyboardProps.keyHeight - 3 : this.keyboardProps.keyHeight)
-        .attr('x', (k: string, j: number) => k === character  ? this.keyboardProps.xKey + 2 + i * 20 + j * (this.keyboardProps.keyWidth + 3)
-                                                              : this.keyboardProps.xKey + i * 20 + j * (this.keyboardProps.keyWidth + 3))
-        .attr('y', (k: string, j: number) => k === character  ? this.keyboardProps.yKey + 1 + i * (this.keyboardProps.keyHeight + 3)
-                                                              : this.keyboardProps.yKey + i * (this.keyboardProps.keyHeight + 3))
+        .attr('width', (k: string) => k === character ? _this.keyboardProps.keyWidth - 4 : _this.keyboardProps.keyWidth)
+        .attr('height', (k: string) => k === character ? _this.keyboardProps.keyHeight - 4 : _this.keyboardProps.keyHeight)
+        .attr('x', (k: string, j: number) => k === character
+            ? _this.keyboardProps.xKey + 2 + i * 20 + j * (_this.keyboardProps.keyWidth + 3)
+            : _this.keyboardProps.xKey + i * 20 + j * (_this.keyboardProps.keyWidth + 3))
+        .attr('y', (k: string, j: number) => k === character
+            ? _this.keyboardProps.yKey + 2 + i * (_this.keyboardProps.keyHeight + 3)
+            : _this.keyboardProps.yKey + i * (_this.keyboardProps.keyHeight + 3))
         .attr('stroke-width', (k: string) => k === character ? 1.2 : 1)
         .attr('fill', (k: string) => {
           const lettre = k.toLowerCase();
-          const indice = this.alphabet.indexOf(lettre);
+          const indice = _this.alphabet.indexOf(lettre);
           if (indice !== -1) {
-            const value = this.matrix[index][indice];
+            const value = _this.matrix[index][indice];
             const shade = value / sum;
-            return this.chartProps.color(shade);
+            return _this.chartProps.color(shade);
           }
           else {
             return 'white';
           }
         })
-        .attr('stroke', (k: string) => this.alphabet.indexOf(k.toLowerCase()) !== -1 ? 'black' : '#C0C0C0')
+        .attr('stroke', (k: string) => _this.alphabet.indexOf(k.toLowerCase()) !== -1 ? 'black' : '#C0C0C0')
         .on('click', (e: string) => {
-          this.heatMap(e);
-          this.barChart(e);
+          _this.heatMap(e);
+          _this.barChart(e);
         });
       });
 
@@ -212,19 +215,20 @@ export class KeyboardCombinationsHeatmapComponent implements OnInit, AfterViewIn
       .enter()
       .append('g')
       .attr('id', (d: string[], i: number) => `rowText${i}`)
-      .each((d: string[], i: number) => {
-        this.d3Service.d3.select(`#rowText${i}`)
+      .each(function(d: string[], i: number) {
+        _this.d3Service.d3.select(this)
           .selectAll('text')
           .data(d)
           .enter()
           .append('text')
           .attr('x', (k: string, j: number) => k === character
-              ? this.keyboardProps.xKey + 2 + 3 + i * 20 + j * (this.keyboardProps.keyWidth + 3)
-              : this.keyboardProps.xKey + 3 + i * 20 + j * (this.keyboardProps.keyWidth + 3))
-          .attr('y', (k: string, j: number) => k === character  ? this.keyboardProps.yKey + 2 + 15 + i * (this.keyboardProps.keyHeight + 3)
-                                                                : this.keyboardProps.yKey + 15 + i * (this.keyboardProps.keyHeight + 3))
+              ? _this.keyboardProps.xKey + 2 + 3 + i * 20 + j * (_this.keyboardProps.keyWidth + 3)
+              : _this.keyboardProps.xKey + 3 + i * 20 + j * (_this.keyboardProps.keyWidth + 3))
+          .attr('y', (k: string, j: number) => k === character
+              ? _this.keyboardProps.yKey + 2 + 15 + i * (_this.keyboardProps.keyHeight + 3)
+              : _this.keyboardProps.yKey + 15 + i * (_this.keyboardProps.keyHeight + 3))
           .text((k: string) => k)
-          .attr('fill', (k: string) => this.alphabet.indexOf(k.toLowerCase()) !== -1 ? 'black' : '#C0C0C0');
+          .attr('fill', (k: string) => _this.alphabet.indexOf(k.toLowerCase()) !== -1 ? 'black' : '#C0C0C0');
         });
   }
 

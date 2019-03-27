@@ -11,6 +11,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { KeyboardCombinationsHeatmapComponent } from './keyboard-combinations-heatmap/keyboard-combinations-heatmap.component';
 import { PasswordTreemapComponent } from './password-treemap/password-treemap.component';
 import { DiversityDonutComponent } from './diversity-donut/diversity-donut.component';
+import { KeyboardOccurrencesHeatmapComponent } from './keyboard-occurrences-heatmap/keyboard-occurrences-heatmap.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { DiversityDonutComponent } from './diversity-donut/diversity-donut.compo
     PasswordNounsChartComponent,
     KeyboardCombinationsHeatmapComponent,
     PasswordTreemapComponent,
-    DiversityDonutComponent
+    DiversityDonutComponent,
+    KeyboardOccurrencesHeatmapComponent
   ],
   imports: [
     CommonModule,

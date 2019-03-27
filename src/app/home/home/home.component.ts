@@ -6,6 +6,7 @@ import { Genders } from 'src/app/shared/models/genders';
 import { KeyboardCombination } from 'src/app/shared/models/keyboard-combination';
 import { PasswordTreemap } from 'src/app/shared/models/password-treemap';
 import { Diversity } from 'src/app/shared/models/diversity';
+import { KeyboardOccurrence } from 'src/app/shared/models/keyboard-occurrence';
 
 @Component({
   selector: 'pp-home',
@@ -15,21 +16,30 @@ import { Diversity } from 'src/app/shared/models/diversity';
 export class HomeComponent implements OnInit {
 
   public passwordNounsChartData$: Observable<[NameOccurrence[], NameOccurrence[], Genders]>;
-  public keyboardHeatMapData$: Observable<KeyboardCombination[]>;
+  public keyboardCombinationsHeatmapData$: Observable<KeyboardCombination[]>;
   public passwordTreemapData$: Observable<PasswordTreemap>;
   public disersityDonutData$: Observable<Diversity[]>;
+  public keyboardOccurrencesHeatmapData$: Observable<[KeyboardOccurrence[], KeyboardOccurrence[], KeyboardOccurrence[]]>;
 
   constructor(private restApiService: RestAPIService) { }
 
   public ngOnInit(): void {
+    this.initializeKeyboardOccurrencesComponent();
     this.initializeKeyboardCombinaisonsComponent();
     this.initializePasswordTreemapComponent();
     this.initializeBarChartComponent();
     this.initializeDiversityDonutComponent();
   }
 
+  public initializeKeyboardOccurrencesComponent(): void {
+    const letters$ = this.restApiService.getRequest<KeyboardOccurrence[]>('letters.csv', true);
+    const numbers$ = this.restApiService.getRequest<KeyboardOccurrence[]>('numbers.csv', true);
+    const special_char$ = this.restApiService.getRequest<KeyboardOccurrence[]>('special_char.csv', true);
+    this.keyboardOccurrencesHeatmapData$ = forkJoin(letters$, numbers$, special_char$);
+  }
+
   public initializeKeyboardCombinaisonsComponent(): void {
-    this.keyboardHeatMapData$ = this.restApiService.getRequest<KeyboardCombination[]>('allCombinations.csv', true);
+    this.keyboardCombinationsHeatmapData$ = this.restApiService.getRequest<KeyboardCombination[]>('allCombinations.csv', true);
   }
 
   public initializePasswordTreemapComponent(): void {
