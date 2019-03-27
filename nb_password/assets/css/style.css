@@ -8,9 +8,7 @@ rect.bordered:hover {
 }
 
 text.mono {
-  font-size: 9pt;
-  font-family: Consolas, courier;
-  /*fill: #aaa;*/
+  font-size: 12px;
 }
 
 text.axis-workweek {
@@ -23,13 +21,14 @@ text.axis-worktime {
 
 .d3-tip {
   font-family: 'Open Sans', sans-serif;
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1;
   font-weight: bold;
   padding: 12px;
   background: rgba(0, 0, 0, 0.8);
   color: #efefef;
   border-radius: 2px;
+  top: 50px;
 }
 
 /* Creates a small triangle extender for the tooltip */
@@ -40,7 +39,7 @@ text.axis-worktime {
   width: 100%;
   line-height: 1;
   color: rgba(0, 0, 0, 0.8);
-  content: "\25B2";
+  content: "\25BC";
   position: absolute;
   text-align: center;
 }
@@ -48,6 +47,28 @@ text.axis-worktime {
 /* Style northward tooltips differently */
 .d3-tip.n:after {
   margin: -1px 0 0 0;
-  top: -7px;
+  top: 100%;
   left: 0;
+}
+
+.legendBar {
+  stroke: white;
+  stroke-width:1px;
+}
+
+text {
+  font-size: 12px;
+  font-family: "Arial", Helvetica, sans-serif;
+}
+
+.button {
+  fill: #BEBEBE;
+  opacity: 0.4;
+}
+
+.button:hover {
+  opacity: 1;
+}
+.selected {
+  opacity: 1;
 }
