@@ -10,6 +10,7 @@ import { SharedModule } from '../shared/shared.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { KeyboardCombinationsHeatmapComponent } from './keyboard-combinations-heatmap/keyboard-combinations-heatmap.component';
 import { PasswordTreemapComponent } from './password-treemap/password-treemap.component';
+import { DiversityDonutComponent } from './diversity-donut/diversity-donut.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { PasswordTreemapComponent } from './password-treemap/password-treemap.co
     TopPageComponent,
     PasswordNounsChartComponent,
     KeyboardCombinationsHeatmapComponent,
-    PasswordTreemapComponent
+    PasswordTreemapComponent,
+    DiversityDonutComponent
   ],
   imports: [
     CommonModule,

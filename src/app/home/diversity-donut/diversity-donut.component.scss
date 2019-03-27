@@ -1,0 +1,11 @@
+:host ::ng-deep {
+    .arc {
+        &:hover {
+            cursor: pointer;
+        }
+    }
+
+    .legende:hover {
+        cursor: pointer;
+    }
+}
