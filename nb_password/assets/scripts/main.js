@@ -175,10 +175,20 @@
     }
 
     var isAnimating = false;
+
+    var reset = function() {
+        clearTimeouts();
+        isAnimating = false;
+        crackedGroup.select("#buttonText")
+            .text("Animer");
+    }
+
     var animate = function(data, unit) {
 
+        reset();
         isAnimating = true;
-        clearTimeouts();
+        crackedGroup.select("#buttonText")
+            .text("Arrêter l'animation");
         // Mise à jour des barres
         var c = 0
         bars.enter().append("rect")
@@ -207,8 +217,7 @@
     
     var heatmap = function(data, unit) {
 
-        clearTimeouts();
-        isAnimating = false;
+        reset();
         var MaxBarWidth = 20;
         var space = (width - Heatmap.left - Heatmap.right);
 
@@ -259,17 +268,11 @@
 
     crackedGroup.select('.button')
         .on("click", function() {
-            if(isAnimating) {
-                clearTimeouts();                
+            if(isAnimating) {            
                 heatmap(json.data[lastSelection], lastSelection);
-                isAnimating = false;
-                crackedGroup.select("#buttonText")
-                    .text("Animer");
             }
             else {
                 animate(json.data[lastSelection], lastSelection);
-                crackedGroup.select("#buttonText")
-                    .text("Arrêter l'animation");
             }
         });
 
