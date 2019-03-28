@@ -3,4 +3,7 @@ export interface NameOccurrence {
   username: number;
   password: number;
   both: number;
+  gender?: Gender;
 }
+
+export type Gender = 'female' | 'male';
