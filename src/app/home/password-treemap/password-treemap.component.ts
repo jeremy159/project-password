@@ -3,6 +3,7 @@ import { PasswordTreemap } from 'src/app/shared/models/password-treemap';
 import { D3Service } from 'src/app/core/services/d3.service';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
 import { Margin } from 'src/app/shared/models/margin';
+import d3Tip from 'd3-tip';
 
 interface TreemapPropreties {
   x: d3.ScaleLinear<number, number>;
@@ -39,6 +40,7 @@ export class PasswordTreemapComponent implements OnInit {
   private g1: any;
   private grandparent: any;
   private transitioning = false;
+  private tip: d3Tip;
 
   constructor(private d3Service: D3Service,
               private preProcessService: PreProcessService) { }
@@ -138,6 +140,13 @@ export class PasswordTreemapComponent implements OnInit {
 
     this.barChartProps.yAxis = this.d3Service.d3.axisLeft(this.barChartProps.y);
     this.barChartAxisGroup.call(this.barChartProps.yAxis);
+
+    this.tip = d3Tip()
+      .attr('class', 'd3-tip')
+      .html(d => { 
+        return d.data.name 
+      })
+
   }
 
   public createTreemap(): void {
@@ -197,6 +206,9 @@ export class PasswordTreemapComponent implements OnInit {
       .text(d => d.data.name);
     g.append('foreignObject')
       .call((d) => this.rect(d))
+      .on('mouseover', this.tip.show)
+      .on('mouseout', this.tip.hide)
+      .call(this.tip)
       .attr('class', 'foreignobj')
       .append('xhtml:div')
       .html((d) => `<p class="title"> ${d.data.name}</p>
