@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { RestAPIService } from 'src/app/core/services/restAPI.service';
 import { Observable, forkJoin } from 'rxjs';
 import { NameOccurrence } from 'src/app/shared/models/name-occurrence';
-import { Genders } from 'src/app/shared/models/genders';
 import { KeyboardCombination } from 'src/app/shared/models/keyboard-combination';
 import { PasswordTreemap } from 'src/app/shared/models/password-treemap';
 import { Diversity } from 'src/app/shared/models/diversity';
@@ -15,7 +14,7 @@ import { KeyboardOccurrence } from 'src/app/shared/models/keyboard-occurrence';
 })
 export class HomeComponent implements OnInit {
 
-  public passwordNounsChartData$: Observable<[NameOccurrence[], NameOccurrence[], Genders]>;
+  public passwordNounsChartData$: Observable<[NameOccurrence[], NameOccurrence[]]>;
   public keyboardCombinationsHeatmapData$: Observable<KeyboardCombination[]>;
   public passwordTreemapData$: Observable<PasswordTreemap>;
   public disersityDonutData$: Observable<Diversity[]>;
@@ -49,8 +48,7 @@ export class HomeComponent implements OnInit {
   public initializeBarChartComponent(): void {
     const femaleData$ = this.restApiService.getRequest<NameOccurrence[]>('noms_propres_female_summary.csv', true);
     const maleData$ = this.restApiService.getRequest<NameOccurrence[]>('noms_propres_male_summary.csv', true);
-    const genders$ = this.restApiService.getRequest<Genders>('genders.csv', true);
-    this.passwordNounsChartData$ = forkJoin([femaleData$, maleData$, genders$]);
+    this.passwordNounsChartData$ = forkJoin([femaleData$, maleData$]);
   }
 
   public initializeDiversityDonutComponent(): void {

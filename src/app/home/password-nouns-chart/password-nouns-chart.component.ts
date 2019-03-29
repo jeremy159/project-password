@@ -1,17 +1,16 @@
 import { Component, ViewChild, ElementRef, OnInit, Input, ChangeDetectionStrategy } from '@angular/core';
 import { D3Service } from 'src/app/core/services/d3.service';
 import { NameOccurrence } from 'src/app/shared/models/name-occurrence';
-import { Margin } from 'src/app/shared/models/margin';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
-import { Genders } from 'src/app/shared/models/genders';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, switchMap, map, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, map } from 'rxjs/operators';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { MatTableDataSource, MatSort } from '@angular/material';
-import { DomSanitizer } from '@angular/platform-browser';
 
 interface D3ChartPropreties {
-  color: d3.ScaleLinear<string, string>;
+  usernameColor: d3.ScaleLinear<string, string>;
+  passwordColor: d3.ScaleLinear<string, string>;
+  egoColor: d3.ScaleLinear<string, string>;
 }
 
 @Component({
@@ -22,20 +21,20 @@ interface D3ChartPropreties {
 })
 export class PasswordNounsChartComponent implements OnInit {
 
-  @Input() private data: [NameOccurrence[], NameOccurrence[], Genders[]];
+  @Input() private data: [NameOccurrence[], NameOccurrence[]];
   @ViewChild('table') private tableElement: ElementRef;
   @ViewChild(MatSort) private sort: MatSort;
 
   private femaleData: NameOccurrence[];
   private maleData: NameOccurrence[];
   private mixedData: NameOccurrence[];
-  // private genders: Genders[];
   private tooltip: any;
-  private d3ChartProps: D3ChartPropreties =
-    {color: undefined};
+  private d3ChartProps: D3ChartPropreties = {usernameColor: undefined, passwordColor: undefined, egoColor: undefined};
   public dataSource: MatTableDataSource<NameOccurrence>;
-  public displayedColumns = ['name', 'username', 'password', 'egocentric'];
-  private colorRange = ['#ffffff', '#084081'];
+  public displayedColumns = ['name', 'username', 'password', 'both', 'egocentric'];
+  private usernameColorRange = ['#FFFFFF', '#311B92'];
+  private passwordColorRange = ['#FFFFFF', '#01579B'];
+  private egoColorRange = ['#FFFFFF', '#1B5E20'];
 
   public searchField: FormControl;
   public formGroup: FormGroup;
@@ -43,17 +42,14 @@ export class PasswordNounsChartComponent implements OnInit {
 
   constructor(private d3Service: D3Service,
               private preProcessService: PreProcessService,
-              private fb: FormBuilder,
-              private sanatizer: DomSanitizer) { }
+              private fb: FormBuilder) { }
 
   public ngOnInit(): void {
     this.femaleData = this.data[0];
     this.maleData = this.data[1];
-    // this.genders = this.data[2];
 
     this.preProcessService.convertNumbers(this.femaleData, ['username', 'password', 'both']);
     this.preProcessService.convertNumbers(this.maleData, ['username', 'password', 'both']);
-    // this.preProcessService.convertNumbers(this.genders, ['male', 'female']);
 
     this.initializeInput();
 
@@ -62,10 +58,15 @@ export class PasswordNounsChartComponent implements OnInit {
   }
 
   private formatData(): void {
-    this.femaleData.forEach((f: NameOccurrence) => f.gender = 'female');
-    this.maleData.forEach((m: NameOccurrence) => m.gender = 'male');
+    this.femaleData.forEach((f: NameOccurrence) => {
+      f.egocentric = f.both / f.username;
+      f.gender = 'female';
+    });
+    this.maleData.forEach((m: NameOccurrence) => {
+      m.egocentric = m.both / m.username;
+      m.gender = 'male';
+    });
     this.mixedData = this.maleData.slice().concat(this.femaleData.slice());
-    this.mixedData.forEach((d: NameOccurrence) => d.egocentric = d.both / d.username);
     this.mixedData = this.mixedData.sort((d1: NameOccurrence, d2: NameOccurrence) =>
       this.d3Service.d3.descending(d1.egocentric, d2.egocentric));
     // this.mixedData = this.mixedData.slice(0, 10);
@@ -75,10 +76,20 @@ export class PasswordNounsChartComponent implements OnInit {
 
   private initialize(): void {
     // Set the ranges
-    this.d3ChartProps.color = this.d3Service.d3.scaleLinear().range(this.colorRange);
+    this.d3ChartProps.usernameColor = this.d3Service.d3.scaleLinear().range(this.usernameColorRange);
+    this.d3ChartProps.passwordColor = this.d3Service.d3.scaleLinear().range(this.passwordColorRange);
+    this.d3ChartProps.egoColor = this.d3Service.d3.scaleLinear().range(this.egoColorRange);
 
     // Domains
-    this.d3ChartProps.color.domain([
+    this.d3ChartProps.usernameColor.domain([
+      this.d3Service.d3.min(this.mixedData, (d: NameOccurrence) => d.username),
+      this.d3Service.d3.max(this.mixedData, (d: NameOccurrence) => d.username)
+    ]);
+    this.d3ChartProps.passwordColor.domain([
+      this.d3Service.d3.min(this.mixedData, (d: NameOccurrence) => d.password),
+      this.d3Service.d3.max(this.mixedData, (d: NameOccurrence) => d.password)
+    ]);
+    this.d3ChartProps.egoColor.domain([
       this.d3Service.d3.min(this.mixedData, (d: NameOccurrence) => d.egocentric),
       this.d3Service.d3.max(this.mixedData, (d: NameOccurrence) => d.egocentric)
     ]);
@@ -97,14 +108,32 @@ export class PasswordNounsChartComponent implements OnInit {
     return this.d3Service.getFormattedPercent(n);
   }
 
-  public getBgColor(ratio: number): string {
-    return this.d3ChartProps.color(ratio);
+  public getBgColor(column: string, ratio: number): string {
+    let color: string;
+    switch (column) {
+      case 'username':
+        color = this.d3ChartProps.usernameColor(ratio);
+      break;
+
+      case 'password':
+        color = this.d3ChartProps.passwordColor(ratio);
+      break;
+
+      case 'egocentric':
+        color = this.d3ChartProps.egoColor(ratio);
+      break;
+
+      default:
+        color = 'rgb(255, 255, 255)';
+      break;
+    }
+    return color;
   }
 
   // https://stackoverflow.com/a/12043228
-  public getColor(ratio: number): string {
+  public getColor(column: string, ratio: number): string {
     const regExp = /\(([^)]+)\)/;
-    const color = this.d3ChartProps.color(ratio);
+    const color = this.getBgColor(column, ratio);
     const match = regExp.exec(color)[1].replace(/\s/g, '');
     const [rs, gs, bs] = match.split(',');
     const r = parseInt(rs, 10);
@@ -113,7 +142,7 @@ export class PasswordNounsChartComponent implements OnInit {
 
     const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
 
-    return luma > 160 ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.87)';
+    return luma > 128 ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.87)';
   }
 
   private getTooltipText(data: NameOccurrence): string {
