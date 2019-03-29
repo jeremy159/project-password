@@ -7,14 +7,11 @@ import { Genders } from 'src/app/shared/models/genders';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, switchMap, map, tap } from 'rxjs/operators';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { MatTableDataSource, MatSort } from '@angular/material';
+import { DomSanitizer } from '@angular/platform-browser';
 
-interface BubbleChartPropreties {
-  x: d3.ScaleLinear<number, number>;
-  y: d3.ScaleLinear<number, number>;
-  r: d3.ScaleLinear<number, number>;
-  xAxis: d3.Axis<number>;
-  yAxis: d3.Axis<number>;
-  color: d3.ScaleOrdinal<string, string>;
+interface D3ChartPropreties {
+  color: d3.ScaleLinear<string, string>;
 }
 
 @Component({
@@ -26,17 +23,19 @@ interface BubbleChartPropreties {
 export class PasswordNounsChartComponent implements OnInit {
 
   @Input() private data: [NameOccurrence[], NameOccurrence[], Genders[]];
-  @ViewChild('bubbleChart') private bubbleChartElement: ElementRef;
+  @ViewChild('table') private tableElement: ElementRef;
+  @ViewChild(MatSort) private sort: MatSort;
+
   private femaleData: NameOccurrence[];
   private maleData: NameOccurrence[];
   private mixedData: NameOccurrence[];
   // private genders: Genders[];
-  private svgElement: any;
   private tooltip: any;
-  private bubbleChartProps: BubbleChartPropreties =
-    {x: undefined, y: undefined, r: undefined, xAxis: undefined, yAxis: undefined, color: undefined};
-  private femaleColors: string[] = ['#880E4F', '#AD1457', '#C2185B', '#D81B60', '#E91E63', '#EC407A'];
-  private maleColors: string[] = ['#1A237E', '#283593', '#303F9F', '#3949AB', '#3F51B5', '#5C6BC0'];
+  private d3ChartProps: D3ChartPropreties =
+    {color: undefined};
+  public dataSource: MatTableDataSource<NameOccurrence>;
+  public displayedColumns = ['name', 'username', 'password', 'egocentric'];
+  private colorRange = ['#ffffff', '#084081'];
 
   public searchField: FormControl;
   public formGroup: FormGroup;
@@ -44,7 +43,8 @@ export class PasswordNounsChartComponent implements OnInit {
 
   constructor(private d3Service: D3Service,
               private preProcessService: PreProcessService,
-              private fb: FormBuilder) { }
+              private fb: FormBuilder,
+              private sanatizer: DomSanitizer) { }
 
   public ngOnInit(): void {
     this.femaleData = this.data[0];
@@ -59,111 +59,74 @@ export class PasswordNounsChartComponent implements OnInit {
 
     this.formatData();
     this.initialize();
-    this.createBubbleChart();
   }
 
   private formatData(): void {
     this.femaleData.forEach((f: NameOccurrence) => f.gender = 'female');
     this.maleData.forEach((m: NameOccurrence) => m.gender = 'male');
     this.mixedData = this.maleData.slice().concat(this.femaleData.slice());
+    this.mixedData.forEach((d: NameOccurrence) => d.egocentric = d.both / d.username);
     this.mixedData = this.mixedData.sort((d1: NameOccurrence, d2: NameOccurrence) =>
-      this.d3Service.d3.descending(d1.both / d1.username, d2.both / d2.username));
+      this.d3Service.d3.descending(d1.egocentric, d2.egocentric));
+    // this.mixedData = this.mixedData.slice(0, 10);
+    this.dataSource = new MatTableDataSource(this.mixedData);
+    this.dataSource.sort = this.sort;
+  }
+
+  private initialize(): void {
+    // Set the ranges
+    this.d3ChartProps.color = this.d3Service.d3.scaleLinear().range(this.colorRange);
+
+    // Domains
+    this.d3ChartProps.color.domain([
+      this.d3Service.d3.min(this.mixedData, (d: NameOccurrence) => d.egocentric),
+      this.d3Service.d3.max(this.mixedData, (d: NameOccurrence) => d.egocentric)
+    ]);
+
+    // Define the div for the tooltip
+    this.tooltip = this.d3Service.d3.select(this.tableElement.nativeElement).append('div')
+      .attr('class', 'tooltip')
+      .style('opacity', 0);
+  }
+
+  public getFormattedNumber(n: number): string {
+    return this.d3Service.getFormattedNumber(n);
+  }
+
+  public getFormattedPercent(n: number): string {
+    return this.d3Service.getFormattedPercent(n);
+  }
+
+  public getBgColor(ratio: number): string {
+    return this.d3ChartProps.color(ratio);
+  }
+
+  // https://stackoverflow.com/a/12043228
+  public getColor(ratio: number): string {
+    const regExp = /\(([^)]+)\)/;
+    const color = this.d3ChartProps.color(ratio);
+    const match = regExp.exec(color)[1].replace(/\s/g, '');
+    const [rs, gs, bs] = match.split(',');
+    const r = parseInt(rs, 10);
+    const g = parseInt(gs, 10);
+    const b = parseInt(bs, 10);
+
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
+
+    return luma > 160 ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.87)';
   }
 
   private getTooltipText(data: NameOccurrence): string {
     return `<strong>Prénom:</strong> ${data.name}<br/>
-            <strong>Proportion:</strong> ${this.d3Service.getFormattedPercent(data.both / data.username)}<br/>
+            <strong>Proportion:</strong> ${this.d3Service.getFormattedPercent(data.egocentric)}<br/>
             <strong>Nom d'usager:</strong> ${this.d3Service.getFormattedNumber(data.username)} fois<br/>
             <strong>Mot de passe:</strong> ${this.d3Service.getFormattedNumber(data.password)} fois<br/>
             <strong>Les deux:</strong> ${this.d3Service.getFormattedNumber(data.both)} fois<br/>`;
   }
 
-  private initialize(): void {
-    // Set the dimensions of the canvas / graph
-    const margin: Margin = { top: 30, right: 20, bottom: 30, left: 50 };
-    const width = 400 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
-
-    // Set the ranges
-    this.bubbleChartProps.x = this.d3Service.d3.scaleLinear().range([0, width]);
-    this.bubbleChartProps.y = this.d3Service.d3.scaleLinear().range([height, 0]);
-    this.bubbleChartProps.r = this.d3Service.d3.scaleSqrt().range([5, 20]);
-    this.bubbleChartProps.color = this.d3Service.d3.scaleOrdinal().range(['#e377c2', '#1f77b4']);
-
-    // Domains
-    this.bubbleChartProps.x.domain([0, this.d3Service.d3.max(this.mixedData, (d: NameOccurrence) => d.username)]);
-    this.bubbleChartProps.y.domain([0, this.d3Service.d3.max(this.mixedData, (d: NameOccurrence) => d.password)]);
-    this.bubbleChartProps.r.domain([
-      this.d3Service.d3.min(this.mixedData, (d: NameOccurrence) => d.both / d.username),
-      this.d3Service.d3.max(this.mixedData, (d: NameOccurrence) => d.both / d.username)
-    ]);
-    this.bubbleChartProps.color.domain(['female', 'male']);
-
-    // Define the axes
-    this.bubbleChartProps.xAxis = this.d3Service.d3.axisBottom(this.bubbleChartProps.x).tickFormat(this.d3Service.getFormattedNumber);
-    this.bubbleChartProps.yAxis = this.d3Service.d3.axisLeft(this.bubbleChartProps.y).tickFormat(this.d3Service.getFormattedNumber);
-
-    this.svgElement = this.d3Service.d3.select(this.bubbleChartElement.nativeElement)
-      .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform', `translate(${margin.left}, ${margin.top})`);
-
-    this.createAxes(this.svgElement, this.bubbleChartProps.xAxis, this.bubbleChartProps.yAxis, width, height);
-
-    // Define the div for the tooltip
-    this.tooltip = this.d3Service.d3.select(this.bubbleChartElement.nativeElement).append('div')
-      .attr('class', 'tooltip')
-      .style('opacity', 0);
-  }
-
-  private createAxes(g: any, xAxis: d3.Axis<number>, yAxis: d3.Axis<number>, width: number, height: number) {
-    // horizontal axe
-    g.append('g')
-      .attr('class', 'x axis')
-      .attr('transform', `translate(0, ${height})`)
-      .call(xAxis);
-
-    // x title
-    g.append('text')
-      .attr('transform', `translate(${width}, ${height})`)
-      .attr('text-anchor', 'end')
-      .text('Nombre d\'apparitions dans le nom d\'utilisateur');
-
-    // vertical axe
-    g.append('g')
-      .attr('class', 'y axis')
-      .call(yAxis);
-
-    // y title
-    g.append('text')
-      .attr('text-anchor', 'middle')
-      .attr('y', -10)
-      .attr('x', 18)
-      .text('Nombre d\'apparitions dans le mot de passe');
-  }
-
-  public createBubbleChart(): void {
-    this.svgElement.selectAll('circle')
-      .data(this.mixedData)
-      .enter()
-      .append('circle')
-      .attr('cx', (d: NameOccurrence) => this.bubbleChartProps.x(d.username))
-      .attr('cy', (d: NameOccurrence) => this.bubbleChartProps.y(d.password))
-      .attr('r', (d: NameOccurrence) => this.bubbleChartProps.r(d.both / d.username))
-      .attr('fill', (d: NameOccurrence) => this.bubbleChartProps.color(d.gender))
-      .on('mouseover', (d: NameOccurrence) => {
-        this.showTooltip(d);
-      })
-      .on('mouseout', (d: NameOccurrence) => {
-        this.hideTooltip(d);
-      });
-  }
-
   private showTooltip(d: NameOccurrence): void {
     const rect = this.d3Service.d3.event.target.getBoundingClientRect();
-    const hostElem = this.bubbleChartElement.nativeElement.getBoundingClientRect();
+    const hostElem = this.tableElement.nativeElement.getBoundingClientRect();
     const tooltip = document.getElementsByClassName('tooltip')[0].getBoundingClientRect();
     this.tooltip.style('left', () => {
       const offset = 24 / 2;

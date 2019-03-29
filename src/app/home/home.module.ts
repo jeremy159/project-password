@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule } from '@angular/material';
+import { MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatTableModule, MatSortModule } from '@angular/material';
 
 import { HomeComponent } from './home/home.component';
 import { TopPageComponent } from './top-page/top-page.component';
@@ -32,6 +32,8 @@ import { KeyboardOccurrencesHeatmapComponent } from './keyboard-occurrences-heat
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
+    MatTableModule,
+    MatSortModule,
     SharedModule
   ],
   exports: [
