@@ -39,6 +39,7 @@ export class PasswordTreemapComponent implements OnInit {
   private g1: any;
   private grandparent: any;
   private transitioning = false;
+  private tip: any;
 
   constructor(private d3Service: D3Service,
               private preProcessService: PreProcessService) { }
@@ -52,10 +53,31 @@ export class PasswordTreemapComponent implements OnInit {
     this.createTreemap();
   }
 
+  public mouseover(): void {
+    this.tip.style("display", "inline");
+  }
+  public mousemove(d): void {
+    this.tip.html(
+      `
+        <p class="name"> ${d.data.name}</p>
+        <p class="count">${this.d3Service.getFormattedNumber(d.value)}</p>
+      `
+      )
+      .style("left", (this.d3Service.d3.event.pageX + 10) + "px")
+      .style("top", (this.d3Service.d3.event.pageY - 50) + "px");
+  }
+  public mouseout(): void {
+    this.tip.style("display", "none");
+  }
+
   private initialize(): void {
-    const margin: Margin = { top: 30, right: 0, bottom: 20, left: 0 };
+
     const width = 750;
     const height = 500;
+    const SVGMargin: Margin = { top: 50, right: 0, bottom: 20, left: 150 };
+    const treemapMargin: Margin = { top: SVGMargin.top, right: 0, bottom: 0, left: SVGMargin.left };
+    const navMargin = { top: treemapMargin.top - 30, right: 0, bottom: 0, left: treemapMargin.left };
+    const barChartMargin: Margin = { top: SVGMargin.top, right: 0, bottom: 0, left: width + treemapMargin.left + 75 };
 
     this.treemapProps.x = this.d3Service.d3.scaleLinear()
       .domain([0, width])
@@ -65,6 +87,12 @@ export class PasswordTreemapComponent implements OnInit {
       .range([0, height]);
 
     this.treemapProps.color = this.d3Service.d3.scaleOrdinal(this.d3Service.d3.schemeCategory10);
+
+    //Tooltip
+    this.tip = this.d3Service.d3.select("#treemapDiv")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("display", "none");
 
     /***** Création du treemap *****/
     this.treemap = this.d3Service.d3.treemap()
@@ -76,55 +104,56 @@ export class PasswordTreemapComponent implements OnInit {
     // On ajoute un clipPath pour pas que l'animation du treemap sorte de ses dimensions
     this.d3Service.d3.select('#treemapSvg')
       .attr('width', '100%')
-      .attr('height', height + margin.bottom + margin.top);
+      .attr('height', height + treemapMargin.bottom + treemapMargin.top);
+
     this.d3Service.d3.select('#treemapSvg')
       .append('defs')
       .append('clipPath')
       .attr('id', 'clip')
       .append('rect')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top);
+      .attr('transform', `translate(${treemapMargin.left}, ${treemapMargin.top - (treemapMargin.top - navMargin.top)})`)
+      .attr('width', width)
+      .attr('height', height - treemapMargin.bottom + (treemapMargin.top - navMargin.top));
 
     // Treemap
     this.treemapSvg = this.d3Service.d3.select(this.treemapElement.nativeElement)
       .attr('clip-path', 'url(#clip)')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.bottom + margin.top)
-      .attr('margin-left', -margin.left + 'px')
-      .attr('margin-right', -margin.right + 'px')
+      .attr('width', width + treemapMargin.left + treemapMargin.right)
+      .attr('height', height + treemapMargin.bottom + treemapMargin.top)
+      .attr('margin-left', -treemapMargin.left + 'px')
+      .attr('margin-right', -treemapMargin.right + 'px')
       .append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        .attr('transform', `translate(${treemapMargin.left}, ${treemapMargin.top})`)
         .style('shape-rendering', 'crispEdges');
 
     // Navigation
     this.grandparent = this.treemapSvg.append('g')
       .attr('class', 'grandparent');
     this.grandparent.append('rect')
-      .attr('y', -margin.top)
+      .attr('transform', `translate(${0}, ${navMargin.top - treemapMargin.top})`)
       .attr('width', width)
-      .attr('height', margin.top)
+      .attr('height', treemapMargin.top - navMargin.top)
       .attr('fill', '#bbbbbb');
     this.grandparent.append('text')
-      .attr('x', 6)
-      .attr('y', 6 - margin.top)
+      .attr('transform', `translate(${6}, ${2*(navMargin.top - treemapMargin.top)/3})`)
+      //.attr('x', 6)
+      //.attr('y', (navMargin.top - treemapMargin.top)/2)
       .attr('dy', '.75em');
 
     /***** BARCHART *****/
-    const barChartMargin: Margin = { top: 25, right: 0, bottom: 0, left: 30 };
-    const barChartWidth = 200 - barChartMargin.left - barChartMargin.right;
-    const barChartHeight = 125 - barChartMargin.top - barChartMargin.bottom;
+    const barChartWidth = 200;
+    const barChartHeight = 125;
 
     /***** Création des éléments du diagramme à barres *****/
     this.barChartSvg = this.d3Service.d3.select(this.barChartElement.nativeElement)
       .attr('width', barChartWidth)
       .attr('height', barChartHeight)
-      .attr('transform', `translate(${width + barChartMargin.left}, ${barChartMargin.top})`);
+      .attr('transform', `translate(${barChartMargin.left}, ${barChartMargin.top})`);
     this.barChartSvg.append('text')
-      .attr('transform', `translate(${0}, ${barChartMargin.top - 10})`)
+      .attr('transform', `translate(${0}, ${-10})`)
       .text('Top 5');
 
-    const barChartGroup = this.barChartSvg.append('g')
-      .attr('transform', 'translate(' + barChartMargin.left + ',' + barChartMargin.top + ')');
+    const barChartGroup = this.barChartSvg.append('g');
 
     this.barChartBarsGroup = barChartGroup.append('g');
     this.barChartAxisGroup = barChartGroup.append('g')
@@ -138,6 +167,7 @@ export class PasswordTreemapComponent implements OnInit {
 
     this.barChartProps.yAxis = this.d3Service.d3.axisLeft(this.barChartProps.y);
     this.barChartAxisGroup.call(this.barChartProps.yAxis);
+
   }
 
   public createTreemap(): void {
@@ -184,11 +214,15 @@ export class PasswordTreemapComponent implements OnInit {
       .data(node.children)
       .enter()
       .append('g');
-    g.selectAll('.child')
-      .data(d => d.children || [d])
+    g.filter(d => d.children) //On ajoute les enfants aux éléments qui ont des enfants
+      .selectAll('.child')
+      .data(d => d.children)
       .enter()
       .append('rect')
       .attr('class', 'child')
+      .on("mouseover", d => this.mouseover())
+      .on("mousemove", d => this.mousemove(d))
+      .on("mouseout", d => this.mouseout())
       .call((d) => this.rect(d));
     g.append('rect')
       .attr('class', 'parent')
@@ -206,7 +240,6 @@ export class PasswordTreemapComponent implements OnInit {
     // Si on est pas à la racine de l'arbre et qu'il y a des enfants qu'il est possible de cliquer on les fait clignoter
     g.filter(d => d.children)
       .classed('children', true)
-      .classed('blink', (d) => d.parent.data.name !== 'catégories' && d.parent.data.name !== 'significations')
       .on('click', (d) => this.transition(d));
 
     return g;
