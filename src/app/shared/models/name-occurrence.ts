@@ -5,6 +5,7 @@ export interface NameOccurrence {
   both: number;
   gender?: Gender;
   egocentric?: number;
+  position?: number;
 }
 
 export type Gender = 'female' | 'male';

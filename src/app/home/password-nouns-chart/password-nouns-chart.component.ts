@@ -30,12 +30,13 @@ export class PasswordNounsChartComponent implements OnInit {
   private mixedData: NameOccurrence[];
   private tooltip: any;
   private d3ChartProps: D3ChartPropreties = {usernameColor: undefined, passwordColor: undefined, egoColor: undefined};
-  public dataSource: MatTableDataSource<NameOccurrence>;
-  public displayedColumns = ['name', 'username', 'password', 'both', 'egocentric'];
   private usernameColorRange = ['#FFFFFF', '#311B92'];
   private passwordColorRange = ['#FFFFFF', '#01579B'];
   private egoColorRange = ['#FFFFFF', '#1B5E20'];
 
+  public dataSource: MatTableDataSource<NameOccurrence>;
+  public displayedColumns = ['position', 'name', 'username', 'password', 'both', 'egocentric'];
+  public selectedRowIndex = 2;
   public searchField: FormControl;
   public formGroup: FormGroup;
   public searchResult$: Observable<string>;
@@ -69,6 +70,7 @@ export class PasswordNounsChartComponent implements OnInit {
     this.mixedData = this.maleData.slice().concat(this.femaleData.slice());
     this.mixedData = this.mixedData.sort((d1: NameOccurrence, d2: NameOccurrence) =>
       this.d3Service.d3.descending(d1.egocentric, d2.egocentric));
+    this.mixedData.forEach((m: NameOccurrence, i: number) => m.position = i + 1);
     // this.mixedData = this.mixedData.slice(0, 10);
     this.dataSource = new MatTableDataSource(this.mixedData);
     this.dataSource.sort = this.sort;
