@@ -1,16 +1,30 @@
-import { Component, ViewChild, ElementRef, OnInit, Input, ChangeDetectionStrategy } from '@angular/core';
+import {  Component,
+          ViewChild,
+          ElementRef,
+          OnInit,
+          Input,
+          ChangeDetectionStrategy,
+          ViewChildren,
+          QueryList } from '@angular/core';
 import { D3Service } from 'src/app/core/services/d3.service';
 import { NameOccurrence } from 'src/app/shared/models/name-occurrence';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, switchMap, map } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, map, filter, tap } from 'rxjs/operators';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { MatTableDataSource, MatSort } from '@angular/material';
+import { MatTableDataSource, MatSort, MatRow } from '@angular/material';
+import { SelectionModel } from '@angular/cdk/collections';
 
 interface D3ChartPropreties {
   usernameColor: d3.ScaleLinear<string, string>;
   passwordColor: d3.ScaleLinear<string, string>;
   egoColor: d3.ScaleLinear<string, string>;
+}
+
+interface SearchResponse {
+  text: string;
+  index: number;
+  hasResult: boolean;
 }
 
 @Component({
@@ -24,11 +38,11 @@ export class PasswordNounsChartComponent implements OnInit {
   @Input() private data: [NameOccurrence[], NameOccurrence[]];
   @ViewChild('table') private tableElement: ElementRef;
   @ViewChild(MatSort) private sort: MatSort;
+  @ViewChildren(MatRow, {read: ElementRef}) private rows: QueryList<ElementRef>;
 
   private femaleData: NameOccurrence[];
   private maleData: NameOccurrence[];
   private mixedData: NameOccurrence[];
-  private tooltip: any;
   private d3ChartProps: D3ChartPropreties = {usernameColor: undefined, passwordColor: undefined, egoColor: undefined};
   private usernameColorRange = ['#FFFFFF', '#311B92'];
   private passwordColorRange = ['#FFFFFF', '#01579B'];
@@ -40,6 +54,7 @@ export class PasswordNounsChartComponent implements OnInit {
   public searchField: FormControl;
   public formGroup: FormGroup;
   public searchResult$: Observable<string>;
+  public selection: SelectionModel<NameOccurrence>;
 
   constructor(private d3Service: D3Service,
               private preProcessService: PreProcessService,
@@ -71,9 +86,9 @@ export class PasswordNounsChartComponent implements OnInit {
     this.mixedData = this.mixedData.sort((d1: NameOccurrence, d2: NameOccurrence) =>
       this.d3Service.d3.descending(d1.egocentric, d2.egocentric));
     this.mixedData.forEach((m: NameOccurrence, i: number) => m.position = i + 1);
-    // this.mixedData = this.mixedData.slice(0, 10);
     this.dataSource = new MatTableDataSource(this.mixedData);
     this.dataSource.sort = this.sort;
+    this.selection = new SelectionModel(false, null);
   }
 
   private initialize(): void {
@@ -95,11 +110,6 @@ export class PasswordNounsChartComponent implements OnInit {
       this.d3Service.d3.min(this.mixedData, (d: NameOccurrence) => d.egocentric),
       this.d3Service.d3.max(this.mixedData, (d: NameOccurrence) => d.egocentric)
     ]);
-
-    // Define the div for the tooltip
-    this.tooltip = this.d3Service.d3.select(this.tableElement.nativeElement).append('div')
-      .attr('class', 'tooltip')
-      .style('opacity', 0);
   }
 
   public getFormattedNumber(n: number): string {
@@ -147,38 +157,17 @@ export class PasswordNounsChartComponent implements OnInit {
     return luma > 128 ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.87)';
   }
 
-  private getTooltipText(data: NameOccurrence): string {
-    return `<strong>Prénom:</strong> ${data.name}<br/>
-            <strong>Proportion:</strong> ${this.d3Service.getFormattedPercent(data.egocentric)}<br/>
-            <strong>Nom d'usager:</strong> ${this.d3Service.getFormattedNumber(data.username)} fois<br/>
-            <strong>Mot de passe:</strong> ${this.d3Service.getFormattedNumber(data.password)} fois<br/>
-            <strong>Les deux:</strong> ${this.d3Service.getFormattedNumber(data.both)} fois<br/>`;
-  }
-
-  private showTooltip(d: NameOccurrence): void {
-    const rect = this.d3Service.d3.event.target.getBoundingClientRect();
-    const hostElem = this.tableElement.nativeElement.getBoundingClientRect();
-    const tooltip = document.getElementsByClassName('tooltip')[0].getBoundingClientRect();
-    this.tooltip.style('left', () => {
-      const offset = 24 / 2;
-      const x = rect.left + rect.width / 2 - tooltip.width / 2 - offset;
-      return `${x}px`;
-    }).style('top', () => {
-      const padding = 20;
-      const y = rect.top - hostElem.top - tooltip.height - padding;
-      return `${y}px`;
-    });
-
-    this.tooltip.transition()
-      .duration(200)
-      .style('opacity', .9);
-    this.tooltip.html(this.getTooltipText(d));
-  }
-
-  private hideTooltip(d: any): void {
-    this.tooltip.transition()
-      .duration(500)
-      .style('opacity', 0);
+  private showRow(index: number): void {
+    if (index != null) {
+      const rowsArray = this.rows.toArray();
+      this.selection.select(this.mixedData[index]);
+      const el: any = (<ElementRef>rowsArray[index]).nativeElement;
+      const padding = el.clientHeight + 8;
+      this.tableElement.nativeElement.scroll({top: el.offsetTop - padding, behavior: 'smooth'});
+    }
+    else {
+      this.selection.select(null);
+    }
   }
 
   private initializeInput(): void {
@@ -189,24 +178,29 @@ export class PasswordNounsChartComponent implements OnInit {
       map((term: string) => term.toLowerCase()),
       debounceTime(400),
       distinctUntilChanged(),
-      switchMap(term => this.searchInFiles(term))
+      switchMap(term => this.searchInFiles(term)),
+      tap((response: SearchResponse) => this.showRow(response.hasResult ? response.index : null)),
+      map((response: SearchResponse) => response.text)
     );
   }
 
-  private searchInFiles(term: string): Observable<string> {
+  private searchInFiles(term: string): Observable<SearchResponse> {
     let text = '';
-    const subject: BehaviorSubject<string> = new BehaviorSubject<string>(text);
+    let hasResult = false;
+    let index = -1;
+    const subject: BehaviorSubject<SearchResponse> = new BehaviorSubject<SearchResponse>({text, index, hasResult});
     if (term !== '') {
       text = 'Votre prénom n\'apparaît pas<br/>dans les prénoms les plus égocentriques';
       for (let i = 0; i < this.mixedData.length; i++) {
         if (this.mixedData[i].name === term) {
-          text = `Parmi les prénoms les plus égocentriques,<br/>
-                  ${term.toUpperCase()} arrive en ${i + 1}${i === 0 ? 'ère' : 'eme'} position!`;
+          text = `Voyez votre prénom dans le tableau!`;
+          hasResult = true;
+          index = i;
           break;
         }
       }
     }
-    subject.next(text);
+    subject.next({text, index, hasResult});
     return subject.asObservable();
   }
 }
