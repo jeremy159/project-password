@@ -13,19 +13,20 @@ body {
     min-height: calc(100vh + 400px);
 
     .d3-tip {
+        font-family: 'Open Sans', sans-serif;
+        font-size: 12px;
         line-height: 1;
+        font-weight: bold;
         padding: 12px;
-        border-radius: 2px;
-        color: #fff;
         background: rgba(0, 0, 0, 0.8);
+        color: #efefef;
+        border-radius: 2px;
     }
 
+    /* Creates a small triangle extender for the tooltip */
     .d3-tip:after {
         display: inline;
-        top: 100%;
-        left: 0;
         width: 100%;
-        margin: -1px 0 0 0;
         box-sizing: border-box;
         font-size: 10px;
         line-height: 1;
@@ -33,5 +34,12 @@ body {
         content: "\25BC";
         position: absolute;
         text-align: center;
+    }
+      
+    /* Style northward tooltips differently */
+    .d3-tip.n:after {
+        margin: -1px 0 0 0;
+        top: 100%;
+        left: 0;
     }
 }
