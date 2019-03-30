@@ -232,8 +232,10 @@ export class PasswordTreemapComponent implements OnInit {
       .attr('class', 'foreignobj')
       .filter(d => d.data.name.split(' ')[0] != 'restants')
       .append('xhtml:div')
-      .html((d) => `<p class="title"> ${d.data.name}</p>
-                    <p>${this.d3Service.getFormattedNumber(d.value)}</p>`)
+      .html((d) => `<p class="stats"> 
+                        <span class="title">${d.data.name}:</span>
+                        <span class="number">${this.d3Service.getFormattedNumber(d.value)}</span>
+                    </p>`)
       .attr('class', 'textdiv'); // textdiv class allows us to style the text easily with CSS
 
     // Si on est pas à la racine de l'arbre, chaque élément est un 'children'
