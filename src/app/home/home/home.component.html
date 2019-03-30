@@ -17,5 +17,9 @@
 </pp-password-nouns-chart>
 <pp-diversity-donut
     *ngIf="disersityDonutData$ | async as disersityDonutData"
-    [dada]="disersityDonutData">
+    [data]="disersityDonutData">
 </pp-diversity-donut>
+<pp-password-cracking-heatmap
+    *ngIf="passwordCrackingHeatmap$ | async as passwordCrackingHeatmap"
+    [data]="passwordCrackingHeatmap">
+</pp-password-cracking-heatmap>

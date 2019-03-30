@@ -12,6 +12,7 @@ import { KeyboardCombinationsHeatmapComponent } from './keyboard-combinations-he
 import { PasswordTreemapComponent } from './password-treemap/password-treemap.component';
 import { DiversityDonutComponent } from './diversity-donut/diversity-donut.component';
 import { KeyboardOccurrencesHeatmapComponent } from './keyboard-occurrences-heatmap/keyboard-occurrences-heatmap.component';
+import { PasswordCrackingHeatmapComponent } from './password-cracking-heatmap/password-cracking-heatmap.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { KeyboardOccurrencesHeatmapComponent } from './keyboard-occurrences-heat
     KeyboardCombinationsHeatmapComponent,
     PasswordTreemapComponent,
     DiversityDonutComponent,
-    KeyboardOccurrencesHeatmapComponent
+    KeyboardOccurrencesHeatmapComponent,
+    PasswordCrackingHeatmapComponent
   ],
   imports: [
     CommonModule,

@@ -55,20 +55,20 @@ export class PasswordTreemapComponent implements OnInit {
   }
 
   public mouseover(): void {
-    this.tip.style("display", "inline");
+    this.tip.style('display', 'inline');
   }
   public mousemove(d): void {
     this.tip.html(
       `
-        <p class="name"> ${d.data.name}</p>
-        <p class="count">${this.d3Service.getFormattedNumber(d.value)}</p>
+        <p class='name'> ${d.data.name}</p>
+        <p class='count'>${this.d3Service.getFormattedNumber(d.value)}</p>
       `
       )
-      .style("left", (this.d3Service.d3.event.pageX + 10) + "px")
-      .style("top", (this.d3Service.d3.event.pageY - 50) + "px");
+      .style('left', (this.d3Service.d3.event.pageX + 10) + 'px')
+      .style('top', (this.d3Service.d3.event.pageY - 50) + 'px');
   }
   public mouseout(): void {
-    this.tip.style("display", "none");
+    this.tip.style('display', 'none');
   }
 
   private initialize(): void {
@@ -89,11 +89,11 @@ export class PasswordTreemapComponent implements OnInit {
 
     this.treemapProps.color = this.d3Service.d3.scaleOrdinal(this.d3Service.d3.schemeCategory10);
 
-    //Tooltip
-    this.tip = this.d3Service.d3.select("#treemapDiv")
-      .append("div")
-      .attr("class", "tooltip")
-      .style("display", "none");
+    // Tooltip
+    this.tip = this.d3Service.d3.select('#treemapDiv')
+      .append('div')
+      .attr('class', 'tooltip')
+      .style('display', 'none');
 
     /***** Création du treemap *****/
     this.treemap = this.d3Service.d3.treemap()
@@ -136,9 +136,9 @@ export class PasswordTreemapComponent implements OnInit {
       .attr('height', treemapMargin.top - navMargin.top)
       .attr('fill', '#bbbbbb');
     this.grandparent.append('text')
-      .attr('transform', `translate(${6}, ${2*(navMargin.top - treemapMargin.top)/3})`)
-      //.attr('x', 6)
-      //.attr('y', (navMargin.top - treemapMargin.top)/2)
+      .attr('transform', `translate(${6}, ${2 * (navMargin.top - treemapMargin.top) / 3})`)
+      // .attr('x', 6)
+      // .attr('y', (navMargin.top - treemapMargin.top)/2)
       .attr('dy', '.75em');
 
     /***** BARCHART *****/
@@ -215,15 +215,15 @@ export class PasswordTreemapComponent implements OnInit {
       .data(node.children)
       .enter()
       .append('g');
-    g.filter(d => d.children) //On ajoute les enfants aux éléments qui ont des enfants
+    g.filter(d => d.children) // On ajoute les enfants aux éléments qui ont des enfants
       .selectAll('.child')
       .data(d => d.children)
       .enter()
       .append('rect')
       .attr('class', 'child')
-      .on("mouseover", d => this.mouseover())
-      .on("mousemove", d => this.mousemove(d))
-      .on("mouseout", d => this.mouseout())
+      .on('mouseover', d => this.mouseover())
+      .on('mousemove', d => this.mousemove(d))
+      .on('mouseout', d => this.mouseout())
       .call((d) => this.rect(d));
     g.append('rect')
       .attr('class', 'parent')
@@ -234,7 +234,7 @@ export class PasswordTreemapComponent implements OnInit {
       .call((d) => this.rect(d))
       .attr('class', 'foreignobj')
       .append('xhtml:div')
-      .html((d) => `<p class="title"> ${d.data.name}</p>
+      .html((d) => `<p class='title'> ${d.data.name}</p>
                     <p>${this.d3Service.getFormattedNumber(d.value)}</p>`)
       .attr('class', 'textdiv'); // textdiv class allows us to style the text easily with CSS
 

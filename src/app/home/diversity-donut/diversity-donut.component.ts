@@ -41,7 +41,7 @@ const passwords_matrix = [
 })
 export class DiversityDonutComponent implements OnInit {
 
-  @Input() private dada: Diversity[];
+  @Input() private data: Diversity[];
   @ViewChild('donut') private donutElement: ElementRef;
   private svgElement: any;
   private donutProps: DonutPropreties = {pie: undefined, arc: undefined, innerRadius: 200, outerRadius: 300, donutXPos: 400};
@@ -54,7 +54,7 @@ export class DiversityDonutComponent implements OnInit {
               private preProcessService: PreProcessService) { }
 
   ngOnInit() {
-    this.preProcessService.convertNumbers(this.dada, ['quantity']);
+    this.preProcessService.convertNumbers(this.data, ['quantity']);
 
     this.formatData();
     this.initialize();
@@ -65,7 +65,7 @@ export class DiversityDonutComponent implements OnInit {
     const alphabet = ['a', 'A', '7', '$'];
     const matrice: MatriceElement[][] = [[], [], [], []];
 
-    this.dada.forEach((d: Diversity) => {
+    this.data.forEach((d: Diversity) => {
       const indices: number[] = [];
       const array: number[] = [];
       let temp = 1000;
