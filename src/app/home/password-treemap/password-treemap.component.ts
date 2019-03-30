@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { PasswordTreemap } from 'src/app/shared/models/password-treemap';
 import { D3Service } from 'src/app/core/services/d3.service';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
@@ -22,7 +22,8 @@ interface BarChartProperties {
 @Component({
   selector: 'pp-password-treemap',
   templateUrl: './password-treemap.component.html',
-  styleUrls: ['./password-treemap.component.scss']
+  styleUrls: ['./password-treemap.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PasswordTreemapComponent implements OnInit {
 

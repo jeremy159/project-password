@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { Diversity } from 'src/app/shared/models/diversity';
 import { D3Service } from 'src/app/core/services/d3.service';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
@@ -36,7 +36,8 @@ const passwords_matrix = [
 @Component({
   selector: 'pp-diversity-donut',
   templateUrl: './diversity-donut.component.html',
-  styleUrls: ['./diversity-donut.component.scss']
+  styleUrls: ['./diversity-donut.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DiversityDonutComponent implements OnInit {
 

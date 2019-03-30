@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, ElementRef, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { KeyboardOccurrence } from 'src/app/shared/models/keyboard-occurrence';
 import { D3Service } from 'src/app/core/services/d3.service';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
@@ -17,7 +17,8 @@ type OccurrenceType = 'letters' | 'numbers' | 'specialChars';
 @Component({
   selector: 'pp-keyboard-occurrences-heatmap',
   templateUrl: './keyboard-occurrences-heatmap.component.html',
-  styleUrls: ['./keyboard-occurrences-heatmap.component.scss']
+  styleUrls: ['./keyboard-occurrences-heatmap.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KeyboardOccurrencesHeatmapComponent implements OnInit {
 
