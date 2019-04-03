@@ -389,7 +389,12 @@ export class PasswordTreemapComponent implements OnInit {
     let res = '';
     const sep = ' > ';
     d.ancestors().reverse().forEach((i) => {
+      const alt = i.data.name.match(' ');
+      if (alt) {
+        res += i.data.name.split(' ')[0] + sep;
+      } else {
         res += i.data.name + sep;
+      }
     });
     return res.split(sep)
       .filter((i) => i !== '')
