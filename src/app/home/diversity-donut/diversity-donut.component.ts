@@ -9,6 +9,11 @@ interface DonutPropreties {
   outerRadius: number;
   innerRadius: number;
   donutXPos: number;
+  donutYPos: number;
+  legendRectXPos: number;
+  legendRectYPos: number;
+  legendTextXPos: number;
+  legendTextYPos: number;
 }
 
 interface MatriceElement {
@@ -44,7 +49,9 @@ export class DiversityDonutComponent implements OnInit {
   @Input() private data: Diversity[];
   @ViewChild('donut') private donutElement: ElementRef;
   private svgElement: any;
-  private donutProps: DonutPropreties = {pie: undefined, arc: undefined, innerRadius: 200, outerRadius: 300, donutXPos: 400};
+  private donutProps: DonutPropreties =
+    {pie: undefined, arc: undefined, innerRadius: 100, outerRadius: 150, donutXPos: 160, donutYPos: 180,
+    legendRectXPos: 0, legendRectYPos: 0, legendTextXPos: 0, legendTextYPos: 0};
   private repartition: number[] = [];
   private repartition_tags: number[] = [];
   private repartition_matrix: number[][] = [[], [], [], []];
@@ -122,8 +129,12 @@ export class DiversityDonutComponent implements OnInit {
 
   private initialize(): void {
     /* SVG ELEMENT */
-    const width = 1000;
-    const height = 650;
+    const width = 700;
+    const height = 400;
+    this.donutProps.legendRectXPos = this.donutProps.donutXPos + 180;
+    this.donutProps.legendRectYPos = 70;
+    this.donutProps.legendTextXPos = this.donutProps.donutXPos + 223;
+    this.donutProps.legendTextYPos = 93;
 
     this.svgElement = this.d3Service.d3.select(this.donutElement.nativeElement)
       .append('svg')
@@ -149,7 +160,7 @@ export class DiversityDonutComponent implements OnInit {
                 .append('g')
                 .attr('class', 'arc')
                 .attr('id', (d, i: number) => 'g' + i)
-                .attr('transform', `translate(${this.donutProps.donutXPos}, 320)`)
+                .attr('transform', `translate(${this.donutProps.donutXPos}, ${this.donutProps.donutYPos})`)
                 .on('click', (d, i: number) => this.changeDonut(i))
                 .on('mouseover', (d, i: number) => this.mouseOver(d.value, i))
                 .on('mouseout', (d, i: number) => this.mouseOut(d.value, i));
@@ -169,10 +180,10 @@ export class DiversityDonutComponent implements OnInit {
       .attr('class', 'legende')
       .attr('fill', (d, i: number) => repartition_colors[i])
       .style('stroke', (d, i: number) => i < 4 ? 'black' : 'white')
-      .attr('height', 50)
-      .attr('width', 50)
-      .attr('x', () => this.donutProps.donutXPos + 350)
-      .attr('y', (d, i: number) => 150 + 53 * i)
+      .attr('height', 35)
+      .attr('width', 35)
+      .attr('x', () => this.donutProps.legendRectXPos)
+      .attr('y', (d, i: number) => this.donutProps.legendRectYPos + 38 * i)
       .on('click', (d, i: number) => {
         if (i < 4) {
           this.mouseOut(d, i);
@@ -198,9 +209,9 @@ export class DiversityDonutComponent implements OnInit {
       .append('text')
       .attr('class', 'legendeInit')
       .text((d, i: number) => i < 1 ? d + ' alphabet' : d + ' alphabets')
-      .attr('x', () => this.donutProps.donutXPos + 410)
-      .attr('y', (d, i: number) => 182 + 53 * i)
-      .attr('font-size', '25px');
+      .attr('x', () => this.donutProps.legendTextXPos)
+      .attr('y', (d, i: number) => this.donutProps.legendTextYPos + 38 * i)
+      .attr('font-size', '17px');
   }
 
   /* RETOUR À 0 */
@@ -215,7 +226,7 @@ export class DiversityDonutComponent implements OnInit {
       .append('g')
       .attr('class', 'arc')
       .attr('id', (d, i: number) => 'g' + i)
-      .attr('transform', `translate(${this.donutProps.donutXPos}, 320)`)
+      .attr('transform', `translate(${this.donutProps.donutXPos}, ${this.donutProps.donutYPos})`)
       .on('click', (d, i: number) => this.changeDonut(i))
       .on('mouseover', (d, i: number) => {
         if (d.value !== 0) {
@@ -262,8 +273,8 @@ export class DiversityDonutComponent implements OnInit {
       .transition()
       .duration(500)
       .attr('fill', 'black')
-      .attr('x', () => this.donutProps.donutXPos + 410)
-      .attr('y', (d, i: number) => 182 + 53 * i);
+      .attr('x', () => this.donutProps.legendTextXPos)
+      .attr('y', (d, i: number) => this.donutProps.legendTextYPos + 38 * i);
   }
 
   /* MISE-À-JOUR DU DONUT CHART ET DE LA LÉGENDE */
@@ -277,8 +288,8 @@ export class DiversityDonutComponent implements OnInit {
       .transition()
       .duration(300)
       .attr('fill', (d, i: number) => indice === i ? 'black' : 'white')
-      .attr('x', (d, i: number) => indice === i ? this.donutProps.donutXPos + 310 : 1500)
-      .attr('y', (d, i: number) => indice === i ? 100 : 182 + 53 * i);
+      .attr('x', (d, i: number) => indice === i ? this.donutProps.legendRectXPos : 1500)
+      .attr('y', (d, i: number) => indice === i ? 50 : this.donutProps.legendTextYPos + 38 * i);
 
     // Donut
     const arcs = this.svgElement.selectAll('g.arc')
@@ -287,7 +298,7 @@ export class DiversityDonutComponent implements OnInit {
       .append('g')
       .attr('class', 'arc')
       .attr('id', (d, i: number) => 'g' + i)
-      .attr('transform', `translate(${this.donutProps.donutXPos}, 320)`)
+      .attr('transform', `translate(${this.donutProps.donutXPos}, ${this.donutProps.donutYPos})`)
       .on('mouseover', (d, i: number) => this.mouseOver(d.value, i))
       .on('mouseout', (d, i: number) => this.mouseOut(d.value, i))
       .on('click', () => this.reInitialize());
@@ -331,19 +342,19 @@ export class DiversityDonutComponent implements OnInit {
       .append('text')
       .attr('class', 'legende')
       .text((d) => d)
-      .attr('x', () => this.donutProps.donutXPos + 410)
-      .attr('y', (d, i: number) => 182 + 53 * i)
-      .attr('font-size', '25px');
+      .attr('x', () => this.donutProps.legendTextXPos)
+      .attr('y', (d, i: number) => this.donutProps.legendTextYPos + 38 * i)
+      .attr('font-size', '17px');
   }
 
   /* FONCTIONS MOUSEOVER/MOUSEOUT*/
   // Mouseover
   private mouseOver(data, id: number): void {
     this.svgElement.selectAll('rect.legende')
-      .attr('x', () => this.donutProps.donutXPos + 350)
-      .attr('y', (d, i: number) => 150 + 53 * i)
-      .attr('height', 50)
-      .attr('width', 50);
+      .attr('x', () => this.donutProps.legendRectXPos)
+      .attr('y', (d, i: number) => this.donutProps.legendRectYPos + 38 * i)
+      .attr('height', 35)
+      .attr('width', 35);
 
     const newArc = this.d3Service.d3.arc()
       .innerRadius(this.donutProps.innerRadius - 5)
@@ -357,17 +368,17 @@ export class DiversityDonutComponent implements OnInit {
     this.svgElement.selectAll('#rect' + id)
         .transition('mouseOverRect')
         .duration(200)
-        .attr('height', 52)
-        .attr('width', 52)
-        .attr('x', () => this.donutProps.donutXPos + 349)
-        .attr('y', 149 + 53 * id);
+        .attr('height', 37)
+        .attr('width', 37)
+        .attr('x', () => this.donutProps.legendRectXPos - 1)
+        .attr('y', this.donutProps.legendRectYPos - 1 + 38 * id);
 
     this.svgElement.selectAll('#g' + id)
       .append('g')
       .append('text')
       .attr('class', 'mouse-text')
       .text((d) => d.value.toLocaleString('en'))
-      .attr('font-size', '50px')
+      .attr('font-size', '30px')
       .attr('text-anchor', 'middle')
       .attr('font-family', 'Verdana');
 
@@ -392,7 +403,7 @@ export class DiversityDonutComponent implements OnInit {
           return passwords_matrix[index][id];
         }
       })
-      .attr('font-size', '25px')
+      .attr('font-size', '15px')
       .attr('text-anchor', 'middle')
       .attr('font-family', 'Verdana')
       .attr('dy', '1.3em');
@@ -423,7 +434,7 @@ export class DiversityDonutComponent implements OnInit {
       .append('text')
       .attr('class', 'mouse-text')
       .text((d) => (100 * d.value / total).toFixed(2) + '% du total')
-      .attr('font-size', '15px')
+      .attr('font-size', '10px')
       .attr('text-anchor', 'middle')
       .attr('font-family', 'Verdana')
       .attr('dy', '3.7em');
@@ -434,7 +445,7 @@ export class DiversityDonutComponent implements OnInit {
         .append('text')
         .attr('class', 'mouse-text')
         .text((d) => (100 * d.value / sum).toFixed(2) + '% de la catégorie')
-        .attr('font-size', '15px')
+        .attr('font-size', '10px')
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Verdana')
         .attr('dy', '4.9em');
@@ -453,10 +464,10 @@ export class DiversityDonutComponent implements OnInit {
     this.svgElement.selectAll('#rect' + id)
       .transition('mouseOutRect')
       .duration(200)
-      .attr('height', 50)
-      .attr('width', 50)
-      .attr('x', () => this.donutProps.donutXPos + 350)
-      .attr('y', () => 150 + 53 * id);
+      .attr('height', 35)
+      .attr('width', 35)
+      .attr('x', () => this.donutProps.legendRectXPos)
+      .attr('y', () => this.donutProps.legendRectYPos + 38 * id);
 
     this.svgElement.selectAll('.mouse-text').remove();
   }
