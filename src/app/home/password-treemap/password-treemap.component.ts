@@ -246,6 +246,8 @@ export class PasswordTreemapComponent implements OnInit {
       .filter(d => d.parent.data.name != 'catégories')
       .classed('hoverable', true);
 
+    g.filter(d => d.parent.data.name == 'catégories')
+        .classed("selectable", true)
     return g;
   }
 
