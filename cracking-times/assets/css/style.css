@@ -1,0 +1,29 @@
+
+.tooltip {
+    position: absolute;
+    text-align: left;
+    padding: 5px;
+    font: 12px sans-serif;
+    background: #fff;
+    border: 1px solid black;
+    pointer-events: none;
+  }
+
+.highlight {
+    text-anchor: middle;
+    font-size: 24px;
+    pointer-events: none;
+}
+
+.axisTitle {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.legend {
+    pointer-events: none;
+}
+
+path {
+    pointer-events: none;
+}
