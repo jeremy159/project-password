@@ -14,6 +14,7 @@ import { DiversityDonutComponent } from './diversity-donut/diversity-donut.compo
 import { KeyboardOccurrencesHeatmapComponent } from './keyboard-occurrences-heatmap/keyboard-occurrences-heatmap.component';
 import { PasswordCrackingHeatmapComponent } from './password-cracking-heatmap/password-cracking-heatmap.component';
 import { CustomPasswordComponent } from './custom-password/custom-password.component';
+import { ShieldIconComponent } from './custom-password/shield-icon/shield-icon.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import { CustomPasswordComponent } from './custom-password/custom-password.compo
     DiversityDonutComponent,
     KeyboardOccurrencesHeatmapComponent,
     PasswordCrackingHeatmapComponent,
-    CustomPasswordComponent
+    CustomPasswordComponent,
+    ShieldIconComponent
   ],
   imports: [
     CommonModule,
