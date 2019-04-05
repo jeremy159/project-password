@@ -15,6 +15,7 @@ import { KeyboardOccurrencesHeatmapComponent } from './keyboard-occurrences-heat
 import { PasswordCrackingHeatmapComponent } from './password-cracking-heatmap/password-cracking-heatmap.component';
 import { CustomPasswordComponent } from './custom-password/custom-password.component';
 import { ShieldIconComponent } from './custom-password/shield-icon/shield-icon.component';
+import { CalendarHeatmapComponent } from './calendar-heatmap/calendar-heatmap.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { ShieldIconComponent } from './custom-password/shield-icon/shield-icon.c
     KeyboardOccurrencesHeatmapComponent,
     PasswordCrackingHeatmapComponent,
     CustomPasswordComponent,
-    ShieldIconComponent
+    ShieldIconComponent,
+    CalendarHeatmapComponent
   ],
   imports: [
     CommonModule,

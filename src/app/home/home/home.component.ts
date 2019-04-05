@@ -7,6 +7,7 @@ import { PasswordTreemap } from 'src/app/shared/models/password-treemap';
 import { Diversity } from 'src/app/shared/models/diversity';
 import { KeyboardOccurrence } from 'src/app/shared/models/keyboard-occurrence';
 import { PasswordCrackingTimes } from 'src/app/shared/models/password-cracking-times';
+import { YearOccurrence } from 'src/app/shared/models/year-occurrence';
 
 @Component({
   selector: 'pp-home',
@@ -20,7 +21,8 @@ export class HomeComponent implements OnInit {
   public passwordTreemapData$: Observable<PasswordTreemap>;
   public disersityDonutData$: Observable<Diversity[]>;
   public keyboardOccurrencesHeatmapData$: Observable<[KeyboardOccurrence[], KeyboardOccurrence[], KeyboardOccurrence[]]>;
-  public passwordCrackingHeatmap$: Observable<PasswordCrackingTimes>;
+  public passwordCrackingHeatmapData$: Observable<PasswordCrackingTimes>;
+  public calendarHeatmapData$: Observable<YearOccurrence[]>;
 
   constructor(private restApiService: RestAPIService) { }
 
@@ -31,6 +33,7 @@ export class HomeComponent implements OnInit {
     this.initializeBarChartComponent();
     this.initializeDiversityDonutComponent();
     this.initializePasswordCrackingHeatmapComponent();
+    this.initializeCalendarHeatmapComponent();
   }
 
   public initializeKeyboardOccurrencesComponent(): void {
@@ -59,6 +62,10 @@ export class HomeComponent implements OnInit {
   }
 
   public initializePasswordCrackingHeatmapComponent(): void {
-    this.passwordCrackingHeatmap$ = this.restApiService.getRequest<PasswordCrackingTimes>('crackingTimes.json', true, false);
+    this.passwordCrackingHeatmapData$ = this.restApiService.getRequest<PasswordCrackingTimes>('crackingTimes.json', true, false);
+  }
+
+  public initializeCalendarHeatmapComponent(): void {
+    this.calendarHeatmapData$ = this.restApiService.getRequest<YearOccurrence[]>('annees.csv', true);
   }
 }

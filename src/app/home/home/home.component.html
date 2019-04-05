@@ -7,6 +7,10 @@
     *ngIf="keyboardCombinationsHeatmapData$ | async as keyboardCombinationsHeatmapData"
     [data]="keyboardCombinationsHeatmapData">
 </pp-keyboard-combinations-heatmap>
+<pp-calendar-heatmap
+    *ngIf="calendarHeatmapData$ | async as calendarHeatmapData"
+    [data]="calendarHeatmapData">
+</pp-calendar-heatmap>
 <pp-password-treemap
     *ngIf="passwordTreemapData$ | async as passwordTreemapData"
     [data]="passwordTreemapData">
@@ -20,7 +24,7 @@
     [data]="disersityDonutData">
 </pp-diversity-donut>
 <pp-password-cracking-heatmap
-    *ngIf="passwordCrackingHeatmap$ | async as passwordCrackingHeatmap"
+    *ngIf="passwordCrackingHeatmapData$ | async as passwordCrackingHeatmap"
     [data]="passwordCrackingHeatmap">
 </pp-password-cracking-heatmap>
 <pp-custom-password>

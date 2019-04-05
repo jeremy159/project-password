@@ -1,0 +1,33 @@
+:host ::ng-deep {
+    display: block;
+    position: relative;
+
+    .tooltip {
+        font-family: 'Open Sans', sans-serif;
+        position: absolute;
+        max-width: 170px;
+        padding: 12px;
+        font-size: 14px;
+        background: black;
+        color: white;
+        border-radius: 8px;
+        pointer-events: none;
+        top: 100px;
+        left: 400px;
+
+        &:after {
+            display: inline;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            margin: -5px 0 0 0;
+            box-sizing: border-box;
+            font-size: 16px;
+            line-height: 1;
+            color: rgba(0, 0, 0, 0.8);
+            content: "\25BC";
+            position: absolute;
+            text-align: center;
+        }
+    }
+}
