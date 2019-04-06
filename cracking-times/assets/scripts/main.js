@@ -52,14 +52,14 @@
         .text("minutes")
 
     //Tooltip
-    var tooltip = d3.select("#my_dataviz")
+    /*var tooltip = d3.select("#my_dataviz")
         .append("div")
         .attr("class", "tooltip")
-        .style("display", "none");
+        .style("display", "none");*/
 
-    var mouseover = function() {
+    /*var mouseover = function() {
         tooltip.style("display", "inline");
-    }
+    }*/
     
     var mousemove = function(d) {
         var cumulatif = cumulatifPoints.filter(p => p.t == d.t);
@@ -98,7 +98,7 @@
             .ease(d3.easeExpInOut)
             .attr("r", 0);
         bar.attr("opacity", 0);
-        tooltip.style("display", "none");
+        //tooltip.style("display", "none");
     }
 
     // get the data
@@ -140,7 +140,7 @@
             .attr("transform", d => `translate(${x(d.t) - barWidth/2}, ${y(d.n)})`)
             .attr("width", barWidth)
             .attr("height", d => Graph.height - y(d.n) )
-            .on("mouseover", mouseover)
+            //.on("mouseover", mouseover)
             .on("mousemove", mousemove)
             .on("mouseleave", mouseout);
 
@@ -165,7 +165,7 @@
             .attr("cy", function(d) { return y(d.n) } )
             .attr("r", 0)
             .attr("fill", colors[0])
-            .on("mouseover", mouseover)
+            //.on("mouseover", mouseover)
             .on("mousemove", mousemove)
             .on("mouseleave", mouseout);
 
@@ -210,7 +210,7 @@
                 .attr("cy", function(d) { return y(d.n) } )
                 .attr("r", 0)
                 .attr("fill", colors[1])
-                .on("mouseover", mouseover)
+                //.on("mouseover", mouseover)
                 .on("mousemove", mousemove)
                 .on("mouseleave", mouseout);
 
