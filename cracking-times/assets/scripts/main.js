@@ -83,7 +83,7 @@
             )
             .style("left", (d3.event.pageX + 20) + "px")
             .style("top", (d3.event.pageY - 100) + "px");*/
-        text.text(`${formatPercent(d.n)} des mots de passes sont décryptés en moins de ${formatMinutes(d.t)} minutes!`)
+        text.text(`${formatPercent(d.n)} des mots de passes sont déchiffés en moins de ${formatMinutes(d.t)} minutes!`)
     }
     var mouseout = function(d) {
         var cumulatif = cumulatifPoints.filter(p => p.t == d.t);
