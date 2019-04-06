@@ -23,7 +23,7 @@
     }
 
     var cumulatifPoints, densityPoints;
-    var bars;
+    var bars, text;
 
     var formatPercent4Decimal = d3.format(".4%");
     var formatPercent = d3.format(".2%");
@@ -75,14 +75,15 @@
             .ease(d3.easeExpInOut)
             .attr("r", 6);
         bar.attr("opacity", 1);
-        tooltip.html(
+        /*tooltip.html(
             `
             <p>${formatPercent(d.n)} mots de passe décryptés en ${formatMinutes(d.t)} minutes</p>
             <p> ${formatPercent4Decimal(contribution[0].n)} des mots de passes sont décryptés à cet instant précis </p>
             `
             )
             .style("left", (d3.event.pageX + 20) + "px")
-            .style("top", (d3.event.pageY - 100) + "px");
+            .style("top", (d3.event.pageY - 100) + "px");*/
+        text.text(`${formatPercent(d.n)} des mots de passes sont décryptés en moins de ${formatMinutes(d.t)} minutes!`)
     }
     var mouseout = function(d) {
         var cumulatif = cumulatifPoints.filter(p => p.t == d.t);
@@ -181,7 +182,7 @@
             .text("95% ")
 
         //Fait saillant
-        svg.append("text")
+        text = svg.append("text")
             .attr("class", "highlight")
             .attr("transform", d => `translate(${Graph.width/2}, ${Graph.height / 2})`)
             .text(`95% des mots de passes sont décryptés en moins de ${formatMinutes(d3.max(cumulatif.data, d => d.t))} minutes!`)
