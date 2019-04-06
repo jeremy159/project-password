@@ -31,6 +31,7 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
   private svgNumbersElement: any;
   private svgSpecialcharactersElement: any;
   private tooltip: any;
+  private target: any;
   private heatmapProps: HeatmapPropreties = {color: undefined, keyWidth: 40, keyHeight: 40, keyboardX: 50, keyboardY: 140};
   private keyboard: string[][];
   private lettersMatrix: KeyboardOccurrence[][];
@@ -140,6 +141,7 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
 
     // Define the div for the tooltip
     this.tooltip = this.d3Service.d3.select(this.heatmapElement.nativeElement).append('div')
+      .attr('id', 'keyboard-tooltip')
       .attr('class', 'tooltip')
       .style('opacity', 0);
   }
@@ -184,72 +186,78 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
           .data(row)
           .enter()
           .append('rect')
-          .attr('class', 'rect')
+          .attr('id', (d: string, j: number) => `${type}-rect${i}-${j}`)
           .attr('fill', (d: KeyboardOccurrence) => d.occurrence !== 0 ? _this.heatmapProps.color(d.occurrence) : 'grey')
           .attr('width', _this.heatmapProps.keyWidth)
           .attr('height', _this.heatmapProps.keyHeight)
           .attr('x', (d: KeyboardOccurrence, j: number) => _this.heatmapProps.keyboardX + i * 20 + j * (_this.heatmapProps.keyWidth + 3))
           .attr('y', () => _this.heatmapProps.keyboardY + i * (_this.heatmapProps.keyHeight + 3))
           .attr('stroke', 'black')
-          .style('opacity', 0.8)
-          .on('mouseover', function(d: KeyboardOccurrence, j: number) {
-            if (d.occurrence > 0) {
-              this.dataset.previousX = this.x.baseVal.valueAsString;
-              this.dataset.previousY = this.y.baseVal.valueAsString;
+          .style('opacity', 0.8);
 
-              _this.d3Service.d3.select(this)
-                .attr('width', () => _this.heatmapProps.keyWidth - 4)
-                .attr('height', () => _this.heatmapProps.keyHeight - 4)
-                .attr('x', this.x.baseVal.value + 2)
-                .attr('y', this.y.baseVal.value + 2);
+          _this.d3Service.d3.select(this)
+            .selectAll('text')
+            .data(row)
+            .enter()
+            .append('text')
+            .attr('id', (d: string, j: number) => `${type}-text${i}-${j}`)
+            .attr('class', 'letters')
+            .attr('x', (d: string, j: number) => _this.heatmapProps.keyboardX + 3 + i * 20 + j * (_this.heatmapProps.keyWidth + 3))
+            .attr('y', () => _this.heatmapProps.keyboardY + 15 + i * (_this.heatmapProps.keyHeight + 3))
+            .text((d: string | KeyboardOccurrence) => typeof d === 'string' ? d : d.character)
+            .attr('fill', 'black');
+      })
+      .on('mouseover', () => {
+        this.target = this.d3Service.d3.event.path[0];
+        if (this.target.nodeName === 'text') {
+          this.target = this.d3Service.d3.event.fromElement;
+        }
+        const rectD3Wrapper = this.d3Service.d3.select(this.target);
 
-              _this.d3Service.d3.select(`#${type}-text${i}-${j}`)
-                .attr('x', function() {
-                  return this.x.baseVal[0].value + 2;
-                })
-                .attr('y', function() {
-                  return this.y.baseVal[0].value + 2;
-                });
-              _this.showTooltip(d);
+        if (rectD3Wrapper.attr('id') && rectD3Wrapper.attr('id').split('rect')[1]) {
+          const [strI, strJ] = rectD3Wrapper.attr('id').split('rect')[1].split('-');
+          const [i, j] = [parseInt(strI, 10), parseInt(strJ, 10)];
+
+          if (matrix[i][j].occurrence > 0) {
+            // Rect
+            rectD3Wrapper.attr('width', this.heatmapProps.keyWidth - 4)
+              .attr('height', this.heatmapProps.keyHeight - 4)
+              .attr('x', +rectD3Wrapper.attr('x') + 2)
+              .attr('y', +rectD3Wrapper.attr('y') + 2);
+
+            // Text
+            const textD3Wrapper = this.d3Service.d3.select(`#${type}-text${i}-${j}`);
+            textD3Wrapper.attr('x', +textD3Wrapper.attr('x') + 2)
+              .attr('y', +textD3Wrapper.attr('y') + 2);
+
+            this.showTooltip(matrix[i][j]);
+          }
+        }
+      })
+      .on('mouseout', () => {
+        if (this.target) {
+          const rectD3Wrapper = this.d3Service.d3.select(this.target);
+
+          if (rectD3Wrapper.attr('id') && rectD3Wrapper.attr('id').split('rect')[1]) {
+            const [strI, strJ] = rectD3Wrapper.attr('id').split('rect')[1].split('-');
+            const [i, j] = [parseInt(strI, 10), parseInt(strJ, 10)];
+
+            if (matrix[i][j].occurrence > 0) {
+              // Rect
+              rectD3Wrapper.attr('width', this.heatmapProps.keyWidth)
+                .attr('height', this.heatmapProps.keyHeight)
+                .attr('x', +rectD3Wrapper.attr('x') - 2)
+                .attr('y', +rectD3Wrapper.attr('y') - 2);
+
+              // Text
+              const textD3Wrapper = this.d3Service.d3.select(`#${type}-text${i}-${j}`);
+              textD3Wrapper.attr('x', +textD3Wrapper.attr('x') - 2)
+                .attr('y', +textD3Wrapper.attr('y') - 2);
+
+              this.hideTooltip();
             }
-          })
-          .on('mouseout', function(d: KeyboardOccurrence, j: number) {
-            if (this.dataset.previousX && this.dataset.previousY) {
-              _this.d3Service.d3.select(this)
-                .attr('width', () => _this.heatmapProps.keyWidth)
-                .attr('height', () => _this.heatmapProps.keyHeight)
-                .attr('x', this.dataset.previousX)
-                .attr('y', this.dataset.previousY);
-
-              _this.d3Service.d3.select(`#${type}-text${i}-${j}`)
-                .attr('x', function() {
-                  return this.x.baseVal[0].value - 2;
-                })
-                .attr('y', function() {
-                  return this.y.baseVal[0].value - 2;
-                });
-              _this.hideTooltip(d);
-            }
-          });
-      });
-
-    // map text
-    svg.selectAll('text')
-      .data(type !== 'specialChars' ? keyboard : matrix)
-      .enter()
-      .append('g')
-      .each(function (row: string[] | KeyboardOccurrence[], i: number) {
-        _this.d3Service.d3.select(this)
-          .selectAll('text')
-          .data(row)
-          .enter()
-          .append('text')
-          .attr('id', (d: string, j: number) => `${type}-text${i}-${j}`)
-          .attr('class', 'letters')
-          .attr('x', (d: string, j: number) => _this.heatmapProps.keyboardX + 3 + i * 20 + j * (_this.heatmapProps.keyWidth + 3))
-          .attr('y', () => _this.heatmapProps.keyboardY + 15 + i * (_this.heatmapProps.keyHeight + 3))
-          .text((d: string | KeyboardOccurrence) => typeof d === 'string' ? d : d.character)
-          .attr('fill', 'black');
+          }
+        }
       });
   }
 
@@ -258,9 +266,9 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
   }
 
   private showTooltip(d: KeyboardOccurrence): void {
-    const rect = this.d3Service.d3.event.target.getBoundingClientRect();
+    const rect = this.target.getBoundingClientRect();
     const hostElem = this.heatmapElement.nativeElement.getBoundingClientRect();
-    const tooltip = document.getElementsByClassName('tooltip')[0].getBoundingClientRect();
+    const tooltip = document.getElementById('keyboard-tooltip').getBoundingClientRect();
     this.tooltip.style('left', () => {
       const offset = 24 / 2;
       const x = rect.left + rect.width / 2 - tooltip.width / 2 - offset;
@@ -276,7 +284,7 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
     this.tooltip.html(this.getTooltipText(d));
   }
 
-  private hideTooltip(d: KeyboardOccurrence): void {
+  private hideTooltip(): void {
     this.tooltip.transition()
       .duration(500)
       .style('opacity', 0);

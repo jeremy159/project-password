@@ -24,12 +24,13 @@ export class CalendarHeatmapComponent implements OnInit {
   @ViewChild('heatmap') private heatmapElement: ElementRef;
   private svgElement: any;
   private tooltip: any;
+  private target: any;
   private calendarProps: CalendarProperties =
-    {color: undefined, caseWidth: 80, caseHeight: 30, colorRange: [], smallCaseWidth: 20, smallCaseHeight: 20};
+    { color: undefined, caseWidth: 80, caseHeight: 30, colorRange: [], smallCaseWidth: 20, smallCaseHeight: 20 };
   private yearsMatrix: YearOccurrence[][];
 
   constructor(private d3Service: D3Service,
-              private preProcessService: PreProcessService) { }
+    private preProcessService: PreProcessService) { }
 
   ngOnInit() {
     this.preProcessService.convertNumbers(this.data, ['occurrence']);
@@ -51,14 +52,14 @@ export class CalendarHeatmapComponent implements OnInit {
         max = element.occurrence;
       }
       if (min > element.occurrence && element.occurrence !== 0) {
-          min = element.occurrence;
+        min = element.occurrence;
       }
       row_occ.push(element);
       row_counter++;
       if (row_counter === 12) {
         this.yearsMatrix.push(row_occ);
-          row_counter = 0;
-          row_occ = [];
+        row_counter = 0;
+        row_occ = [];
       }
     });
 
@@ -74,7 +75,7 @@ export class CalendarHeatmapComponent implements OnInit {
       .attr('width', width)
       .attr('height', height);
 
-    this.calendarProps.colorRange = ['#f7fcf0', '#084081'];
+    this.calendarProps.colorRange = ['#EDEDED', '#032853'];
     this.calendarProps.color = this.d3Service.d3.scaleLinear()
       .range(this.calendarProps.colorRange);
 
@@ -101,35 +102,15 @@ export class CalendarHeatmapComponent implements OnInit {
           .data(row)
           .enter()
           .append('rect')
-          .attr('class', 'rect')
-          .attr('fill', function (d: YearOccurrence) {
-              return _this.calendarProps.color(d.occurrence);
-          })
+          .attr('id', (d: string, j: number) => `years-rect${i}-${j}`)
+          .attr('fill', (d: YearOccurrence) => _this.calendarProps.color(d.occurrence))
           .attr('width', _this.calendarProps.caseWidth)
           .attr('height', _this.calendarProps.caseHeight)
           .attr('x', (d: YearOccurrence, j: number) => j * _this.calendarProps.caseWidth)
           .attr('y', () => 250 + i * _this.calendarProps.caseHeight)
           .attr('stroke', 'white')
-          .style('opacity', 0.8)
-          .on('mouseover', function (d: YearOccurrence, j: number) {
-            if (d.occurrence > 0) {
-              // _this.d3Service.d3.select(this)
-              //   .style('border', '2px, black solid');
-              _this.showTooltip(d);
-            }
-          })
-          .on('mouseout', function(d: YearOccurrence, j: number) {
-            // _this.d3Service.d3.select(this)
-              // .style('border', 'none');
-            _this.hideTooltip(d);
-          });
-      });
+          .style('opacity', 0.8);
 
-  this.svgElement.selectAll('text')
-      .data(this.yearsMatrix)
-      .enter()
-      .append('g')
-      .each(function (row: YearOccurrence[], i: number) {
         _this.d3Service.d3.select(this)
           .selectAll('text')
           .data(row)
@@ -140,6 +121,51 @@ export class CalendarHeatmapComponent implements OnInit {
           .attr('y', () => 250 + i * _this.calendarProps.caseHeight + 20)
           .text((d: YearOccurrence) => d.year)
           .attr('fill', 'black');
+      })
+      .on('mouseover', () => {
+        this.target = this.d3Service.d3.event.path[0];
+        if (this.target.nodeName === 'text') {
+          this.target = this.d3Service.d3.event.fromElement;
+        }
+        const rectD3Wrapper = this.d3Service.d3.select(this.target);
+
+        if (rectD3Wrapper.attr('id') && rectD3Wrapper.attr('id').split('rect')[1]) {
+          const [strI, strJ] = rectD3Wrapper.attr('id').split('rect')[1].split('-');
+          const [i, j] = [parseInt(strI, 10), parseInt(strJ, 10)];
+
+          if (this.yearsMatrix[i][j].occurrence > 0) {
+            // Rect
+            rectD3Wrapper.attr('width', this.calendarProps.caseWidth - 4)
+              .attr('height', this.calendarProps.caseHeight - 4)
+              .attr('x', +rectD3Wrapper.attr('x') + 2)
+              .attr('y', +rectD3Wrapper.attr('y') + 2)
+              .attr('stroke', 'black')
+              .attr('stroke-width', 2);
+
+            this.showTooltip(this.yearsMatrix[i][j]);
+          }
+        }
+      })
+      .on('mouseout', () => {
+        if (this.target) {
+          const rectD3Wrapper = this.d3Service.d3.select(this.target);
+
+          if (rectD3Wrapper.attr('id') && rectD3Wrapper.attr('id').split('rect')[1]) {
+            const [strI, strJ] = rectD3Wrapper.attr('id').split('rect')[1].split('-');
+            const [i, j] = [parseInt(strI, 10), parseInt(strJ, 10)];
+
+            if (this.yearsMatrix[i][j].occurrence > 0) {
+              // Rect
+              rectD3Wrapper.attr('width', this.calendarProps.caseWidth)
+                .attr('height', this.calendarProps.caseHeight)
+                .attr('x', +rectD3Wrapper.attr('x') - 2)
+                .attr('y', +rectD3Wrapper.attr('y') - 2)
+                .attr('stroke', 'none');
+
+              this.hideTooltip();
+            }
+          }
+        }
       });
   }
 
@@ -147,16 +173,16 @@ export class CalendarHeatmapComponent implements OnInit {
     let aYearSvg = this.d3Service.d3.select(this.heatmapElement.nativeElement)
       .append('svg');
 
-    const years = this.d3Service.d3.selectAll('rect.rect');
+    const years = this.svgElement.selectAll('rect');
     const _this = this;
-    years.on('mouseout', function () {
-      _this.d3Service.d3.select(this)
-        .attr('rect', 50)
-        .style('opacity', 0.8)
-        .attr('width', _this.calendarProps.caseWidth)
-        .attr('height', _this.calendarProps.caseHeight)
-        .style('cursor', 'default');
-    });
+    // years.on('mouseout', function () {
+    //   _this.d3Service.d3.select(this)
+    //     .attr('rect', 50)
+    //     .style('opacity', 0.8)
+    //     .attr('width', _this.calendarProps.caseWidth)
+    //     .attr('height', _this.calendarProps.caseHeight)
+    //     .style('cursor', 'default');
+    // });
 
     years.on('click', function (d: YearOccurrence) {
       aYearSvg.remove();
@@ -172,77 +198,85 @@ export class CalendarHeatmapComponent implements OnInit {
         .attr('height', _this.calendarProps.caseHeight - 4);
       if (d.occurrence !== 0) {
         _this.d3Service.d3.csv('/data/donnees_traitees/years/' + d.year + '.csv').then(function (formatted_dates_data) {
-            const selectedYearData = _this.getYearData(d.year, formatted_dates_data);
-            let max = 0;
-            let min = 100000000000;
+          const selectedYearData = _this.getYearData(d.year, formatted_dates_data);
+          let max = 0;
+          let min = 100000000000;
 
-            selectedYearData.forEach(element => {
-                element.forEach(day => {
-                    if (max < day.occurrence) {
-                        max = day.occurrence;
-                    }
-                    if (min > day.occurrence) {
-                        min = day.occurrence;
-                    }
-                });
+          selectedYearData.forEach(element => {
+              element.forEach(day => {
+                if (max < day.occurrence) {
+                  console.log(max);
+                  max = day.occurrence;
+                }
+                if (min > day.occurrence && day.occurrence !== 0) {
+                    min = day.occurrence;
+                }
             });
+          });
+          if (min === 100000000000) {
+            min = 0;
+          }
+          _this.calendarProps.color.domain([min, max]);
 
-            _this.calendarProps.color.domain([min, max]);
-
-            aYearSvg.selectAll('rect')
-              .data(selectedYearData)
-              .enter()
-              .append('g')
-              .each(function (row, i: number) {
-                _this.d3Service.d3.select(this)
-                  .selectAll('rect')
-                  .data(row)
-                  .enter()
-                  .append('rect')
-                  .attr('class', 'rect')
-                  .attr('fill', (d2) => _this.calendarProps.color(d2.occurrence))
-                  .attr('width', 20)
-                  .attr('height', 20)
-                  .attr('x', (d2, j: number) => {
-                    if (j > 7 && j < 39) {
-                      if (i < 3) {
-                        return (d2.calendarPos * 28) + (i * 220) + 70;
-                      }
-                      else if (i < 6) {
-                        return (d2.calendarPos * 28) + ((i - 3) * 220) + 70;
-                      }
-                      else if (i < 9) {
-                        return (d2.calendarPos * 28) + ((i - 6) * 220) + 70;
-                      }
-                      else {
-                        return (d2.calendarPos * 28) + ((i - 9) * 220) + 70;
-                      }
+          aYearSvg.selectAll('rect')
+            .data(selectedYearData)
+            .enter()
+            .append('g')
+            .each(function (row, i: number) {
+              _this.d3Service.d3.select(this)
+                .selectAll('rect')
+                .data(row)
+                .enter()
+                .append('rect')
+                .attr('fill', (d2) => {
+                  if (d2.occurrence !== 0) {
+                    return _this.calendarProps.color(d2.occurrence);
+                  } else {
+                    return '#FFFFFF';
+                  }
+                })
+                .attr('width', 20)
+                .attr('height', 20)
+                .attr('x', (d2, j: number) => {
+                  if (j > 7 && j < 39) {
+                    if (i < 3) {
+                      return (d2.calendarPos * 28) + (i * 220) + 70;
                     }
-                  })
-                  .attr('y', (d2, j: number) => {
-                    if (j > 7 && j < 39) {
-                      if (i < 3) {
-                        return d2.weekDay * 21 + 100;
-                      }
-                      else if (i < 6) {
-                        return d2.weekDay * 21 + 300;
-                      }
-                      else if (i < 9) {
-                        return d2.weekDay * 21 + 500;
-                      }
-                      else {
-                        return d2.weekDay * 21 + 700;
-                      }
+                    else if (i < 6) {
+                      return (d2.calendarPos * 28) + ((i - 3) * 220) + 70;
                     }
-                  })
-                  .attr('stroke', 'black')
-                  .style('opacity', function (d2, j) {
-                    if (j > 7 && j < 39) {
-                      return 0.8;
-                    } else {
-                      return 0;
+                    else if (i < 9) {
+                      return (d2.calendarPos * 28) + ((i - 6) * 220) + 70;
                     }
-                  })
+                    else {
+                      return (d2.calendarPos * 28) + ((i - 9) * 220) + 70;
+                    }
+                  }
+                })
+                .attr('y', (d2, j: number) => {
+                  if (j > 7 && j < 39) {
+                    if (i < 3) {
+                      return d2.weekDay * 21 + 100;
+                    }
+                    else if (i < 6) {
+                      return d2.weekDay * 21 + 300;
+                    }
+                    else if (i < 9) {
+                      return d2.weekDay * 21 + 500;
+                    }
+                    else {
+                      return d2.weekDay * 21 + 700;
+                    }
+                  }
+                })
+                .attr('stroke', 'black')
+                .style('opacity', function (d2, j) {
+                  if (j > 7 && j < 39) {
+                    return 0.8;
+                  } else {
+                    return 0;
+                  }
+                })
                 .on('mouseover', function (d2: any, j: number) {
                   if (d.occurrence > 0) {
                     this.dataset.previousX = this.x.baseVal.valueAsString;
@@ -255,16 +289,16 @@ export class CalendarHeatmapComponent implements OnInit {
                       .attr('y', this.y.baseVal.value + 2);
 
                     _this.d3Service.d3.select(`#dayText${i}-${j}`)
-                      .attr('x', function() {
+                      .attr('x', function () {
                         return this.x.baseVal[0].value + 2;
                       })
-                      .attr('y', function() {
+                      .attr('y', function () {
                         return this.y.baseVal[0].value + 2;
                       });
                     _this.showTooltip(d2);
                   }
                 })
-                .on('mouseout', function(d2: any, j: number) {
+                .on('mouseout', function (d2: any, j: number) {
                   if (this.dataset.previousX && this.dataset.previousY) {
                     _this.d3Service.d3.select(this)
                       .attr('width', () => _this.calendarProps.smallCaseWidth)
@@ -273,117 +307,117 @@ export class CalendarHeatmapComponent implements OnInit {
                       .attr('y', this.dataset.previousY);
 
                     _this.d3Service.d3.select(`#dayText${i}-${j}`)
-                      .attr('x', function() {
+                      .attr('x', function () {
                         return this.x.baseVal[0].value - 2;
                       })
-                      .attr('y', function() {
+                      .attr('y', function () {
                         return this.y.baseVal[0].value - 2;
                       });
-                    _this.hideTooltip(d2);
+                    _this.hideTooltip();
                   }
                 });
-              });
-
-            aYearSvg.selectAll('text')
-                .data(selectedYearData)
-                .enter()
-                .append('g')
-                .each(function (row, i: number) {
-                    _this.d3Service.d3.select(this)
-                        .selectAll('text')
-                        .data(row)
-                        .enter()
-                        .append('text')
-                        .attr('id', (d2: string, j: number) => `dayText${i}-${j}`)
-                        .attr('x', function (d2, j: number) {
-                            if (i < 3) {
-                                return (d2.calendarPos * 28) + (i * 220) + 71;
-                            }
-                            else if (i < 6) {
-                                return (d2.calendarPos * 28) + ((i - 3) * 220) + 71;
-                            }
-                            else if (i < 9) {
-                                return (d2.calendarPos * 28) + ((i - 6) * 220) + 71;
-                            }
-                            else {
-                                return (d2.calendarPos * 28) + ((i - 9) * 220) + 71;
-                            }
-                        })
-                        .attr('y', function (d2, j: number) {
-                            if (i < 3) {
-                                if (j < 1) {
-                                    return 280;
-                                } else {
-                                    return d2.weekDay * 21 + 115;
-                                }
-                            }
-                            else if (i < 6) {
-                                if (j < 1) {
-                                    return 480;
-                                } else {
-                                    return d2.weekDay * 21 + 315;
-                                }
-                            }
-                            else if (i < 9) {
-                                if (j < 1) {
-                                    return 680;
-                                } else {
-                                    return d2.weekDay * 21 + 515;
-                                }
-                            } else {
-                                if (j < 1) {
-                                    return 880;
-                                } else {
-                                    return d2.weekDay * 21 + 715;
-                                }
-                            }
-                        })
-                        .text(function (d2, j: number) {
-                            if (j < 1) {
-                                return d2.month;
-                            }
-                            if (j < 8) {
-                                return d2.day;
-                            } else {
-                                if (j < 39) {
-                                    return j - 7;
-                                }
-                            }
-                        })
-                        .attr('fill', 'black');
-                });
-
-            _this.addLegend(aYearSvg, min, max, 0, 10);
-
-            aYearSvg.append('circle')
-                .attr('class', 'but')
-                .attr('cx', 650)
-                .attr('cy', 30)
-                .attr('r', 20)
-                .style('fill', '#1E60AE')
-                .style('opacity', 0.8);
-
-            aYearSvg.append('text')
-                .attr('class', 'but')
-                .text('x')
-                .style('font-size', '20px')
-                .attr('transform', 'translate(645, 35)')
-                .attr('fill', 'white');
-
-            const button = _this.d3Service.d3.selectAll('circle');
-            button.on('click', () => {
-                aYearSvg.remove();
             });
-            button.on('mouseover', function () {
+
+          aYearSvg.selectAll('text')
+            .data(selectedYearData)
+            .enter()
+            .append('g')
+            .each(function (row, i: number) {
               _this.d3Service.d3.select(this)
-                    .style('opacity', 1)
-                    .style('cursor', 'pointer');
+                .selectAll('text')
+                .data(row)
+                .enter()
+                .append('text')
+                .attr('id', (d2: string, j: number) => `dayText${i}-${j}`)
+                .attr('x', function (d2, j: number) {
+                  if (i < 3) {
+                    return (d2.calendarPos * 28) + (i * 220) + 71;
+                  }
+                  else if (i < 6) {
+                    return (d2.calendarPos * 28) + ((i - 3) * 220) + 71;
+                  }
+                  else if (i < 9) {
+                    return (d2.calendarPos * 28) + ((i - 6) * 220) + 71;
+                  }
+                  else {
+                    return (d2.calendarPos * 28) + ((i - 9) * 220) + 71;
+                  }
+                })
+                .attr('y', function (d2, j: number) {
+                  if (i < 3) {
+                    if (j < 1) {
+                      return 280;
+                    } else {
+                      return d2.weekDay * 21 + 115;
+                    }
+                  }
+                  else if (i < 6) {
+                    if (j < 1) {
+                      return 480;
+                    } else {
+                      return d2.weekDay * 21 + 315;
+                    }
+                  }
+                  else if (i < 9) {
+                    if (j < 1) {
+                      return 680;
+                    } else {
+                      return d2.weekDay * 21 + 515;
+                    }
+                  } else {
+                    if (j < 1) {
+                      return 880;
+                    } else {
+                      return d2.weekDay * 21 + 715;
+                    }
+                  }
+                })
+                .text(function (d2, j: number) {
+                  if (j < 1) {
+                    return d2.month;
+                  }
+                  if (j < 8) {
+                    return d2.day;
+                  } else {
+                    if (j < 39) {
+                      return j - 7;
+                    }
+                  }
+                })
+                .attr('fill', 'black');
             });
-            button.on('mouseout', function () {
-              _this.d3Service.d3.select(this).style('opacity', 0.8);
-            });
+
+          _this.addLegend(aYearSvg, min, max, 0, 10);
+
+          aYearSvg.append('circle')
+            .attr('class', 'but')
+            .attr('cx', 650)
+            .attr('cy', 30)
+            .attr('r', 20)
+            .style('fill', '#1E60AE')
+            .style('opacity', 0.8);
+
+          aYearSvg.append('text')
+            .attr('class', 'but')
+            .text('x')
+            .style('font-size', '20px')
+            .attr('transform', 'translate(645, 35)')
+            .attr('fill', 'white');
+
+          const button = _this.d3Service.d3.selectAll('circle');
+          button.on('click', () => {
+            aYearSvg.remove();
           });
-        }
+          button.on('mouseover', function () {
+            _this.d3Service.d3.select(this)
+              .style('opacity', 1)
+              .style('cursor', 'pointer');
+          });
+          button.on('mouseout', function () {
+            _this.d3Service.d3.select(this).style('opacity', 0.8);
+          });
+        });
+      }
     });
   }
 
@@ -415,129 +449,157 @@ export class CalendarHeatmapComponent implements OnInit {
     let day6 = 1;
 
     dateRange.forEach(day => {
-        const counterTemp = day.getMonth();
-        if (counterTemp === 0) {
-            actualMonth = 'Janvier';
-        } else if (counterTemp === 1) {
-            actualMonth = 'Fevrier';
-        } else if (counterTemp === 2) {
-            actualMonth = 'Mars';
-        } else if (counterTemp === 3) {
-            actualMonth = 'Avril';
-        } else if (counterTemp === 4) {
-            actualMonth = 'Mai';
-        } else if (counterTemp === 5) {
-            actualMonth = 'Juin';
-        } else if (counterTemp === 6) {
-            actualMonth = 'Juillet';
-        } else if (counterTemp === 7) {
-            actualMonth = 'Aout';
-        } else if (counterTemp === 8) {
-            actualMonth = 'Septembre';
-        } else if (counterTemp === 9) {
-            actualMonth = 'Octobre';
-        } else if (counterTemp === 10) {
-            actualMonth = 'Novembre';
-        } else if (counterTemp === 11) {
-            actualMonth = 'Decembre';
-        }
+      const counterTemp = day.getMonth();
+      if (counterTemp === 0) {
+        actualMonth = 'Janvier';
+      } else if (counterTemp === 1) {
+        actualMonth = 'Fevrier';
+      } else if (counterTemp === 2) {
+        actualMonth = 'Mars';
+      } else if (counterTemp === 3) {
+        actualMonth = 'Avril';
+      } else if (counterTemp === 4) {
+        actualMonth = 'Mai';
+      } else if (counterTemp === 5) {
+        actualMonth = 'Juin';
+      } else if (counterTemp === 6) {
+        actualMonth = 'Juillet';
+      } else if (counterTemp === 7) {
+        actualMonth = 'Aout';
+      } else if (counterTemp === 8) {
+        actualMonth = 'Septembre';
+      } else if (counterTemp === 9) {
+        actualMonth = 'Octobre';
+      } else if (counterTemp === 10) {
+        actualMonth = 'Novembre';
+      } else if (counterTemp === 11) {
+        actualMonth = 'Decembre';
+      }
 
-        if (counterTemp > monthCounter) {
-            year.push(month);
-            monthCounter = counterTemp;
-            dayCounter = 0;
-            month = [];
-            day0 = 1;
-            day1 = 1;
-            day2 = 1;
-            day3 = 1;
-            day4 = 1;
-            day5 = 1;
-            day6 = 1;
-            month.push({ month: actualMonth, day: '', weekDay: 0, calendarPos: 0, occurrence: 0 });
-            month.push({ month: actualMonth, day: 'Di', weekDay: 0, calendarPos: 0, occurrence: 0 });
-            month.push({ month: actualMonth, day: 'Lu', weekDay: 1, calendarPos: 0, occurrence: 0 });
-            month.push({ month: actualMonth, day: 'Ma', weekDay: 2, calendarPos: 0, occurrence: 0 });
-            month.push({ month: actualMonth, day: 'Me', weekDay: 3, calendarPos: 0, occurrence: 0 });
-            month.push({ month: actualMonth, day: 'Je', weekDay: 4, calendarPos: 0, occurrence: 0 });
-            month.push({ month: actualMonth, day: 'Ve', weekDay: 5, calendarPos: 0, occurrence: 0 });
-            month.push({ month: actualMonth, day: 'Sa', weekDay: 6, calendarPos: 0, occurrence: 0 });
+      if (counterTemp > monthCounter) {
+        year.push(month);
+        monthCounter = counterTemp;
+        dayCounter = 0;
+        month = [];
+        day0 = 1;
+        day1 = 1;
+        day2 = 1;
+        day3 = 1;
+        day4 = 1;
+        day5 = 1;
+        day6 = 1;
+        month.push({ month: actualMonth, day: '', weekDay: 0, calendarPos: 0, occurrence: 0 });
+        month.push({ month: actualMonth, day: 'Di', weekDay: 0, calendarPos: 0, occurrence: 0 });
+        month.push({ month: actualMonth, day: 'Lu', weekDay: 1, calendarPos: 0, occurrence: 0 });
+        month.push({ month: actualMonth, day: 'Ma', weekDay: 2, calendarPos: 0, occurrence: 0 });
+        month.push({ month: actualMonth, day: 'Me', weekDay: 3, calendarPos: 0, occurrence: 0 });
+        month.push({ month: actualMonth, day: 'Je', weekDay: 4, calendarPos: 0, occurrence: 0 });
+        month.push({ month: actualMonth, day: 'Ve', weekDay: 5, calendarPos: 0, occurrence: 0 });
+        month.push({ month: actualMonth, day: 'Sa', weekDay: 6, calendarPos: 0, occurrence: 0 });
+      }
+      if (counterTemp === monthCounter) {
+        dayCounter++;
+        const weekDay = day.getDay();
+        if (weekDay === 0) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day0, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day0++;
+        } else if (weekDay === 1) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day1, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day1++;
+        } else if (weekDay === 2) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day2, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day2++;
+        } else if (weekDay === 3) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day3, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day3++;
+        } else if (weekDay === 4) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day4, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day4++;
+        } else if (weekDay === 5) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day5, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day5++;
+        } else if (weekDay === 6) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day6, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day6++;
+          if (day6 === 2) {
+            if (day0 === 1) { day0++; }
+            if (day1 === 1) { day1++; }
+            if (day2 === 1) { day2++; }
+            if (day3 === 1) { day3++; }
+            if (day4 === 1) { day4++; }
+            if (day5 === 1) { day5++; }
+          }
         }
-        if (counterTemp === monthCounter) {
-            dayCounter++;
-            const weekDay = day.getDay();
-            if (weekDay === 0) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day0, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day0++;
-            } else if (weekDay === 1) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day1, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day1++;
-            } else if (weekDay === 2) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day2, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day2++;
-            } else if (weekDay === 3) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day3, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day3++;
-            } else if (weekDay === 4) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day4, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day4++;
-            } else if (weekDay === 5) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day5, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day5++;
-            } else if (weekDay === 6) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day6, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day6++;
-                if (day6 === 2) {
-                    if (day0 === 1) { day0++; }
-                    if (day1 === 1) { day1++; }
-                    if (day2 === 1) { day2++; }
-                    if (day3 === 1) { day3++; }
-                    if (day4 === 1) { day4++; }
-                    if (day5 === 1) { day5++; }
-                }
-            }
+      }
+      if (counterTemp === 11 && dayCounter === 31) {
+        const weekDay = day.getDay();
+        if (weekDay === 0) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day0, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day0++;
+        } else if (weekDay === 1) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day1, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day1++;
+        } else if (weekDay === 2) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day2, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day2++;
+        } else if (weekDay === 3) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day3, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day3++;
+        } else if (weekDay === 4) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day4, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day4++;
+        } else if (weekDay === 5) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day5, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day5++;
+        } else if (weekDay === 6) {
+          month.push({
+            month: actualMonth, day: dayCounter, weekDay: weekDay,
+            calendarPos: day6, occurrence: formatted_dates_data[dayYearCounter].occurrence
+          });
+          day6++;
         }
-        if (counterTemp === 11 && dayCounter === 31) {
-            const weekDay = day.getDay();
-            if (weekDay === 0) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day0, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day0++;
-            } else if (weekDay === 1) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day1, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day1++;
-            } else if (weekDay === 2) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day2, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day2++;
-            } else if (weekDay === 3) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day3, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day3++;
-            } else if (weekDay === 4) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day4, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day4++;
-            } else if (weekDay === 5) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day5, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day5++;
-            } else if (weekDay === 6) {
-                month.push({ month: actualMonth, day: dayCounter, weekDay: weekDay,
-                  calendarPos: day6, occurrence: formatted_dates_data[dayYearCounter].occurrence });
-                day6++;
-            }
-            year.push(month);
-        }
-        dayYearCounter++;
+        year.push(month);
+      }
+      dayYearCounter++;
     });
     return year;
   }
@@ -547,7 +609,7 @@ export class CalendarHeatmapComponent implements OnInit {
   }
 
   private showTooltip(d: YearOccurrence): void {
-    const rect = this.d3Service.d3.event.target.getBoundingClientRect();
+    const rect = this.target.getBoundingClientRect();
     const hostElem = this.heatmapElement.nativeElement.getBoundingClientRect();
     const tooltip = document.getElementById('calendar-tooltip').getBoundingClientRect();
     this.tooltip.style('left', () => {
@@ -565,8 +627,7 @@ export class CalendarHeatmapComponent implements OnInit {
     this.tooltip.html(this.getTooltipText(d));
   }
 
-  private hideTooltip(d: YearOccurrence): void {
-    console.log('this.d3Service.d3.event.target', this.d3Service.d3.event.target.tagName);
+  private hideTooltip(): void {
     this.tooltip.transition()
       .duration(500)
       .style('opacity', 0);
@@ -597,22 +658,22 @@ export class CalendarHeatmapComponent implements OnInit {
 
     legend.append('stop')
       .attr('offset', '0%')
-      .attr('stop-color', '#f7fcf0')
+      .attr('stop-color', '#EDEDED')
       .attr('stop-opacity', 0.8);
 
     legend.append('stop')
       .attr('offset', '33%')
-      .attr('stop-color', '#bae4bc')
+      .attr('stop-color', '#8F9EAF')
       .attr('stop-opacity', 0.8);
 
     legend.append('stop')
       .attr('offset', '66%')
-      .attr('stop-color', '#7bccc4')
+      .attr('stop-color', '#496381')
       .attr('stop-opacity', 0.8);
 
     legend.append('stop')
       .attr('offset', '100%')
-      .attr('stop-color', '#084081')
+      .attr('stop-color', '#032853')
       .attr('stop-opacity', 0.8);
 
     key.append('rect')
