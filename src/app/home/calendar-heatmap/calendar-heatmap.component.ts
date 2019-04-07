@@ -105,7 +105,7 @@ export class CalendarHeatmapComponent implements OnInit {
           .append('rect')
           .attr('id', (d: string, j: number) => `years-rect${i}-${j}`)
           .attr('class', 'years-rects')
-          .attr('fill', (d: YearOccurrence) => _this.calendarProps.color(d.occurrence))
+          .attr('fill', (d: YearOccurrence) => _this.calendarProps.color(Number(d.occurrence)))
           .attr('width', _this.calendarProps.caseWidth)
           .attr('height', _this.calendarProps.caseHeight)
           .attr('x', (d: YearOccurrence, j: number) => j * _this.calendarProps.caseWidth)
@@ -195,11 +195,12 @@ export class CalendarHeatmapComponent implements OnInit {
 
           selectedYearData.forEach(element => {
               element.forEach(day => {
-                if (max < day.occurrence) {
-                  max = day.occurrence;
+                const dayOccurrence = Number(day.occurrence);
+                if (max < dayOccurrence) {
+                  max = dayOccurrence;
                 }
-                if (min > day.occurrence && day.occurrence !== 0) {
-                    min = day.occurrence;
+                if (min > dayOccurrence && dayOccurrence !== 0) {
+                    min = dayOccurrence;
                 }
             });
           });
@@ -220,7 +221,7 @@ export class CalendarHeatmapComponent implements OnInit {
                 .append('rect')
                 .attr('id', (d2: string, j: number) => `months-rect${i}-${j}`)
                 .attr('fill', (d2) => {
-                  if (d2.occurrence !== 0) {
+                  if (Number(d2.occurrence) !== 0) {
                     return _this.calendarProps.color(d2.occurrence);
                   } else {
                     return '#FFFFFF';
