@@ -6,7 +6,6 @@ import { KeyboardCombination } from 'src/app/shared/models/keyboard-combination'
 import { PasswordTreemap } from 'src/app/shared/models/password-treemap';
 import { Diversity } from 'src/app/shared/models/diversity';
 import { KeyboardOccurrence } from 'src/app/shared/models/keyboard-occurrence';
-import { PasswordCrackingTimes } from 'src/app/shared/models/password-cracking-times';
 import { YearOccurrence } from 'src/app/shared/models/year-occurrence';
 
 @Component({

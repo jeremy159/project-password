@@ -25,7 +25,7 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
   @Input() private data: any;
   @ViewChild('linechart') private linechartElement: ElementRef;
   private density: any;
-  private cumulative: any;
+  private cumulatif: any;
   private linechartSvg: any;
   private colors = ['#69b3a2', '#6900a2'];
   private graphProps: LinechartPropreties =
@@ -41,7 +41,7 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
 
   ngOnInit() {
     this.density = this.data[0];
-    this.cumulative = this.data[1];
+    this.cumulatif = this.data[1];
 
     this.initialize();
     this.createGraph();
@@ -87,7 +87,10 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
     // Axe x
     this.graphProps.x = this.d3Service.d3.scaleLinear()
         .range([0, this.graphProps.Graph.width ]);
-        this.graphProps.xAxis = this.d3Service.d3.axisBottom()
+    const min = this.d3Service.d3.min(this.cumulatif.data, d => d.t);
+    const max = this.d3Service.d3.max(this.cumulatif.data, d => d.t);
+    this.graphProps.x.domain([min, max]);
+    this.graphProps.xAxis = this.d3Service.d3.axisBottom()
         .scale(this.graphProps.x)
         .tickFormat((d: any) => this.formatMinutes(d))
         .ticks(16);
@@ -95,9 +98,9 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
     this.graphProps.y = this.d3Service.d3.scaleLinear()
         .domain([0, 1])
         .range([this.graphProps.Graph.height, 0]);
-        this.graphProps.yAxis = this.d3Service.d3.axisLeft()
+    this.graphProps.yAxis = this.d3Service.d3.axisLeft()
         .scale(this.graphProps.y)
-        .tickFormat(this.d3Service.getFormattedPercent);
+        .tickFormat((d) => this.d3Service.getFormattedPercent(d));
 
     // Création des graphs
     this.linechartSvg.append('g')
@@ -108,17 +111,11 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
   }
 
   public createGraph(): void {
-    const min = this.d3Service.d3.min(this.cumulative.data, d => d.t);
-    const max = this.d3Service.d3.max(this.cumulative.data, d => d.t);
-    this.graphProps.x.domain([min, max]);
-
-    this.graphProps.y.domain([this.d3Service.d3.min(this.cumulative.data, d => d.n), 1]);
-
-    const barWidth = this.graphProps.Graph.width / this.d3Service.d3.max(this.cumulative.data, d => d.t) + 1;
+    const barWidth = this.graphProps.Graph.width / this.d3Service.d3.max(this.cumulatif.data, d => d.t) + 1;
     // Création des barres
     this.bars = this.linechartSvg.append('g')
       .selectAll('rect')
-      .data(this.cumulative.data)
+      .data(this.cumulatif.data)
       .enter().append('rect')
       .attr('fill', 'lightgray')
       .attr('opacity', 0)
@@ -138,7 +135,7 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
   private createCumulative(): void {
     // Création de la courbe cumulative
     this.linechartSvg.append('path')
-      .datum(this.cumulative.data)
+      .datum(this.cumulatif.data)
       .attr('fill', 'none')
       .attr('stroke', this.colors[0])
       .attr('stroke-width', 2)
@@ -150,7 +147,7 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
     // Ajout des points associés à la courbe cumulative
     this.cumulativePoints = this.linechartSvg.append('g')
       .selectAll('dot')
-      .data(this.cumulative.data)
+      .data(this.cumulatif.data)
       .enter()
       .append('circle')
       .attr('cx', (d) => this.graphProps.x(d.t))
@@ -179,7 +176,7 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
       .attr('class', 'highlight')
       .attr('transform', d => `translate(${this.graphProps.Graph.width / 2}, ${this.graphProps.Graph.height / 2})`)
       .text(`95% des mots de passes sont décryptés en moins de
-        ${this.formatMinutes(this.d3Service.d3.max(this.cumulative.data, d => d.t))} minutes!`);
+        ${this.formatMinutes(this.d3Service.d3.max(this.cumulatif.data, d => d.t))} minutes!`);
   }
 
   private createDensity(): void {
