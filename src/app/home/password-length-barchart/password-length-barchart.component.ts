@@ -38,16 +38,16 @@ export class PasswordLengthBarchartComponent implements OnInit {
   }
 
   private initialize(): void {
-    const svgWidth = 1100;
-    const svgHeight = 700;
+    const svgWidth = 800;
+    const svgHeight = 500;
 
     this.svgElement = this.d3Service.d3.select(this.barchartElement.nativeElement)
       .append('svg')
       .attr('width', svgWidth)
       .attr('height', svgHeight);
 
-    this.barchartProps.width = 1000 - 2 * this.barchartProps.margin;
-    this.barchartProps.height = 600 - 2 * this.barchartProps.margin;
+    this.barchartProps.width = 700 - 2 * this.barchartProps.margin;
+    this.barchartProps.height = 400 - 2 * this.barchartProps.margin;
 
     this.chart = this.svgElement.append('g')
       .attr('transform', `translate(${this.barchartProps.margin}, ${this.barchartProps.margin})`);
@@ -189,8 +189,8 @@ export class PasswordLengthBarchartComponent implements OnInit {
       const x = rect.left + rect.width / 2 - tooltip.width / 2 - offset;
       return `${x}px`;
     }).style('top', () => {
-      const padding = 10;
-      const y = rect.top - hostElem.top - tooltip.height - padding;
+      const padding = 30;
+      const y = rect.top - hostElem.top - tooltip.height + padding;
       return `${y}px`;
     });
     this.tooltip.transition()

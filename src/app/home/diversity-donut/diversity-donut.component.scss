@@ -1,4 +1,8 @@
 :host ::ng-deep {
+    .svg-wrapper {
+        height: 550px;
+    }
+
     .arc {
         &:hover {
             cursor: pointer;
