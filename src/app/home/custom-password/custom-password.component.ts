@@ -3,6 +3,7 @@ import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import * as zxcvbn from 'zxcvbn';
 import { Observable, empty } from 'rxjs';
 import { map, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
+import { RestAPIService } from 'src/app/core/services/restAPI.service';
 
 // Fix nécessaire puisque le type ne contient pas le champ password
 interface ZXCVBNResult extends zxcvbn.ZXCVBNResult {
@@ -19,11 +20,12 @@ export class CustomPasswordComponent implements OnInit {
   public searchField: FormControl;
   public formGroup: FormGroup;
   public shieldFillPercentage: number;
-  public shieldColor: zxcvbn.ZXCVBNScore;
+  public shieldColor: zxcvbn.ZXCVBNScore = 0;
   public crackingTime = '';
   public searchResult$: Observable<string[]>;
 
-  constructor(private fb: FormBuilder) { }
+  constructor(private fb: FormBuilder,
+              private restApiService: RestAPIService) { }
 
   ngOnInit() {
     this.buildForm();
@@ -77,6 +79,7 @@ export class CustomPasswordComponent implements OnInit {
   }
 
   private searchInDatabase(value: string): Observable<string[]> {
+    this.restApiService.getRequest<string[]>(`password/${value}`).subscribe((d) => console.log(d));
     return empty();
   }
 }
