@@ -135,7 +135,7 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
       .attr('width', keyboardWidth)
       .attr('height', keyboardHeight);
 
-    const colorRange = ['#f7fcf0', '#084081'];
+    const colorRange = ['#ffffff', '#084081'];
     this.heatmapProps.color = this.d3Service.d3.scaleLinear()
       .range(colorRange);
 
@@ -321,17 +321,17 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
 
     legend.append('stop')
         .attr('offset', '0%')
-        .attr('stop-color', '#f7fcf0')
+        .attr('stop-color', '#ffffff')
         .attr('stop-opacity', 0.8);
 
     legend.append('stop')
       .attr('offset', '33%')
-      .attr('stop-color', '#bae4bc')
+      .attr('stop-color', '#B4C5D9')
       .attr('stop-opacity', 0.8);
 
     legend.append('stop')
       .attr('offset', '66%')
-      .attr('stop-color', '#7bccc4')
+      .attr('stop-color', '#5279A6')
       .attr('stop-opacity', 0.8);
 
     legend.append('stop')
