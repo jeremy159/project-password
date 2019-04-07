@@ -50,5 +50,9 @@ export class D3Service {
 
   public getFormattedPercent(percent: number | string): string {
     return this.d3.format('.2%')(percent).replace('.', ',');
+  } 
+  
+  public getFormatted4Percent(percent: number | string): string {
+    return this.d3.format('.4%')(percent).replace('.', ',');
   }
 }

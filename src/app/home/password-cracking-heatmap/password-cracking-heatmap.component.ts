@@ -35,7 +35,8 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
   private cumulativePoints: any;
   private densityPoints: any;
   private bars: any;
-  private text: any;
+  private txt_cumulatif: any;
+  private txt_density: any;
 
   constructor(private d3Service: D3Service) { }
 
@@ -75,7 +76,7 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
     this.linechartSvg.append('text')
       .attr('class', 'axisTitle')
       .attr('transform', `translate(${-margin.left}, ${-30})`)
-      .text('Pourcentage de mots de passes décryptés');
+      .text('Pourcentage de mots de passes déchiffrés');
 
     // Titre de l'axe x
     this.linechartSvg.append('text')
@@ -172,11 +173,12 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
       .text('95% ');
 
     // Fait saillant
-    this.text = this.linechartSvg.append('text')
+    this.txt_cumulatif = this.linechartSvg.append('text')
       .attr('class', 'highlight')
       .attr('transform', d => `translate(${this.graphProps.Graph.width / 2}, ${this.graphProps.Graph.height / 2})`)
-      .text(`95% des mots de passes sont décryptés en moins de
-        ${this.formatMinutes(this.d3Service.d3.max(this.cumulatif.data, d => d.t))} minutes!`);
+    this.txt_density = this.linechartSvg.append('text')
+        .attr('class', 'highlight')
+        .attr('transform', d => `translate(${this.graphProps.Graph.width / 2}, ${this.graphProps.Graph.height / 2 + 30})`)
   }
 
   private createDensity(): void {
@@ -267,8 +269,9 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
     bar.attr('opacity', 1);
     cumulative.attr('r', 6);
     density.attr('r', 6);
-    this.text.text(`${this.d3Service.getFormattedPercent(d.n)} des mots de passes
+    this.txt_cumulatif.text(`${this.d3Service.getFormattedPercent(d.n)} des mots de passes
       sont déchiffés en moins de ${this.formatMinutes(d.t)} minutes!`);
+    this.txt_density.text(`Contribution de ${this.d3Service.getFormatted4Percent(density.datum().n)} à cet instant précis.`);
   }
   /**
    *  Fait disparaitre les cercles et la barre associé à l'élément survoler
@@ -281,5 +284,7 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
       const density = this.densityPoints.filter(p => p.t === d.t);
       density.attr('r', 0);
       bar.attr('opacity', 0);
+      this.txt_cumulatif.text(``);
+      this.txt_density.text(``);
   }
 }

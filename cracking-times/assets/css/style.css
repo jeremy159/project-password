@@ -27,3 +27,8 @@
 path {
     pointer-events: none;
 }
+
+.highlight {
+    width: 250px;
+    display: block
+}

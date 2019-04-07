@@ -57,10 +57,11 @@ for d in data['data']:
 # Append time 0 to every types
 tot = 0
 for t in data['data']:
-    for e in data['data'][t]:
-        tot += e['value']
     if t != 'seconds':
         data['data'][t].append({'t': 0, 'value': tot})
+    for e in data['data'][t]:
+        if e['t'] != 0 or t == 'seconds':
+            tot += e['value']
 
 #sort
 for d in data['data']:
