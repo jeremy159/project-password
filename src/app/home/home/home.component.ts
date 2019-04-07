@@ -21,7 +21,7 @@ export class HomeComponent implements OnInit {
   public passwordTreemapData$: Observable<PasswordTreemap>;
   public disersityDonutData$: Observable<Diversity[]>;
   public keyboardOccurrencesHeatmapData$: Observable<[KeyboardOccurrence[], KeyboardOccurrence[], KeyboardOccurrence[]]>;
-  public passwordCrackingHeatmapData$: Observable<PasswordCrackingTimes>;
+  public passwordCrackingHeatmapData$: Observable<any>;
   public calendarHeatmapData$: Observable<YearOccurrence[]>;
 
   constructor(private restApiService: RestAPIService) { }
@@ -62,7 +62,9 @@ export class HomeComponent implements OnInit {
   }
 
   public initializePasswordCrackingHeatmapComponent(): void {
-    this.passwordCrackingHeatmapData$ = this.restApiService.getRequest<PasswordCrackingTimes>('crackingTimes.json', true, false);
+    const density$ = this.restApiService.getRequest<any>('density_0_to_95.json', true, false);
+    const cumulative$ = this.restApiService.getRequest<any>('cumulatif_0_to_95.json', true, false);
+    this.passwordCrackingHeatmapData$ = forkJoin([density$, cumulative$]);
   }
 
   public initializeCalendarHeatmapComponent(): void {

@@ -1,16 +1,18 @@
 import { Component, OnInit, ChangeDetectionStrategy, Input, ViewChild, ElementRef } from '@angular/core';
-import { PasswordCrackingTimes, TickValue } from 'src/app/shared/models/password-cracking-times';
 import { D3Service } from 'src/app/core/services/d3.service';
 import { Margin } from 'src/app/shared/models/margin';
 import d3Tip from 'd3-tip';
 
-interface HeatmapPropreties {
+interface LinechartPropreties {
   color: d3.ScaleLogarithmic<string, string>;
+  x: d3.ScaleLinear<string, string>;
+  y: d3.ScaleLinear<string, string>;
+  xAxis: d3.Axis<string>;
+  yAxis: d3.Axis<string>;
   width: number;
-  Heatmap: any;
+  Graph: any;
+  Legend: any;
 }
-
-let tip: any;
 
 @Component({
   selector: 'pp-password-cracking-heatmap',
@@ -20,279 +22,267 @@ let tip: any;
 })
 export class PasswordCrackingHeatmapComponent implements OnInit {
 
-  @Input() private data: PasswordCrackingTimes;
-  @ViewChild('heatmap') private heatmapElement: ElementRef;
-  private heatmapSvg: any;
-  private heatmapProps: HeatmapPropreties = {color: undefined, width: 0, Heatmap: undefined};
-  private buttonGroup: any;
-  private crackedGroup: any;
-  private heatmapGroup: any;
+  @Input() private data: any;
+  @ViewChild('linechart') private linechartElement: ElementRef;
+  private density: any;
+  private cumulative: any;
+  private linechartSvg: any;
+  private colors = ['#69b3a2', '#6900a2'];
+  private graphProps: LinechartPropreties =
+    {color: undefined, width: 0, Graph: undefined, Legend: undefined, x: undefined, y: undefined, xAxis: undefined, yAxis: undefined};
+
+  // Variables utilisés dans les actions
+  private cumulativePoints: any;
+  private densityPoints: any;
   private bars: any;
-  private  timeouts: any[] = [];
-  private isAnimating = false;
+  private text: any;
 
   constructor(private d3Service: D3Service) { }
 
   ngOnInit() {
+    this.density = this.data[0];
+    this.cumulative = this.data[1];
+
     this.initialize();
-    this.createHeatmap();
+    this.createGraph();
   }
 
   private initialize(): void {
-    const datasets = ['seconds', 'minutes', 'hours', 'days', 'months', 'years'];
-    const domain = [10, 100, 1000, 10000, 100000, 1000000, 10000000];
-    const colors = ['#5858e9', '#49bb36', '#3ae396', '#4de02c', '#cbdd1e', '#da5911', '#d70450'];
-    this.heatmapProps.color = this.d3Service.d3.scaleLog().domain(domain).range(colors);
-    const margin: Margin = { top: 100, right: 0, bottom: 50, left: 100 };
-    this.heatmapProps.width = 1300 + margin.left + margin.right;
-    const height = 300 + margin.top + margin.bottom;
+    // On défini les attributs général du graphique
+    const margin: Margin = {top: 60, right: 100, bottom: 50, left: 50};
+    this.graphProps.Graph = {
+        top: margin.top,
+        right: margin.right,
+        bottom: margin.bottom,
+        left: margin.left,
+        width: 1000,
+        height: 600
+    };
+    this.graphProps.Legend = {
+        left: this.graphProps.Graph.width - 60,
+        top: margin.top
+    };
 
-    const SVG = {
-      top: margin.top,
-      right: margin.right,
-      bottom: margin.bottom,
-      left: margin.left
-    };
-    const Legend = {
-      top: SVG.top,
-      right: SVG.right,
-      bottom: SVG.bottom,
-      left: SVG.left,
-      barHeight: (height - SVG.top - margin.bottom) / (domain.length),
-      barWidth: 15
-    };
-    this.heatmapProps.Heatmap = {
-      top: Legend.top + Legend.barHeight * domain.length / 2 - 55 / 2,
-      right: SVG.right + 50,
-      bottom: Legend.bottom,
-      left: Legend.left + 150,
-      barHeight: 55,
-      barWidth: 0 // Est utilisé plus bas
-    };
-    const Buttons = {
-      top: this.heatmapProps.Heatmap.top - 40,
-      right: 0,
-      bottom: 0,
-      left: this.heatmapProps.Heatmap.left,
-      buttonWidth: 75,
-      buttonHeight: 30,
-      space: 7
-    };
-    const Cracked = {
-      top: this.heatmapProps.Heatmap.top + this.heatmapProps.Heatmap.barHeight + 50,
-      right: 0,
-      bottom: 0,
-      left: this.heatmapProps.Heatmap.left,
-      animate: {
-        position: {
-          top: 0,
-          right: 0,
-          botton: 0,
-          left: 0
-        }
-      }
-    };
-    // heatmap svg
-    this.heatmapSvg = this.d3Service.d3.select(this.heatmapElement.nativeElement)
+    // On ajoute le svg au div
+    this.linechartSvg = this.d3Service.d3.select(this.linechartElement.nativeElement)
       .append('svg')
-      .attr('width', this.heatmapProps.width)
-      .attr('height', height);
+      .attr('width', this.graphProps.Graph.width + margin.left + margin.right)
+      .attr('height', this.graphProps.Graph.height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform', `translate(${this.graphProps.Graph.left},${this.graphProps.Graph.top})`);
 
-    this.buttonGroup = this.heatmapSvg.append('g')
-      .attr('id', 'buttons')
-      .attr('transform', `translate(${Buttons.left}, ${Buttons.top})`);
-    this.buttonGroup.selectAll('rect')
-      .data(datasets)
+    // Titre de l'axe y
+    this.linechartSvg.append('text')
+      .attr('class', 'axisTitle')
+      .attr('transform', `translate(${-margin.left}, ${-30})`)
+      .text('Pourcentage de mots de passes décryptés');
+
+    // Titre de l'axe x
+    this.linechartSvg.append('text')
+      .attr('class', 'axisTitle')
+      .attr('transform', `translate(${(this.graphProps.Graph.width) / 2}, ${this.graphProps.Graph.height + 40})`)
+      .text('minutes');
+
+    // Définition des axes
+    // Axe x
+    this.graphProps.x = this.d3Service.d3.scaleLinear()
+        .range([0, this.graphProps.Graph.width ]);
+        this.graphProps.xAxis = this.d3Service.d3.axisBottom()
+        .scale(this.graphProps.x)
+        .tickFormat((d: any) => this.formatMinutes(d))
+        .ticks(16);
+    // Axe y
+    this.graphProps.y = this.d3Service.d3.scaleLinear()
+        .domain([0, 1])
+        .range([this.graphProps.Graph.height, 0]);
+        this.graphProps.yAxis = this.d3Service.d3.axisLeft()
+        .scale(this.graphProps.y)
+        .tickFormat(this.d3Service.getFormattedPercent);
+
+    // Création des graphs
+    this.linechartSvg.append('g')
+        .attr('transform', `translate(0,${this.graphProps.Graph.height})`)
+        .call(this.graphProps.xAxis);
+    this.linechartSvg.append('g')
+        .call(this.graphProps.yAxis);
+  }
+
+  public createGraph(): void {
+    const min = this.d3Service.d3.min(this.cumulative.data, d => d.t);
+    const max = this.d3Service.d3.max(this.cumulative.data, d => d.t);
+    this.graphProps.x.domain([min, max]);
+
+    this.graphProps.y.domain([this.d3Service.d3.min(this.cumulative.data, d => d.n), 1]);
+
+    const barWidth = this.graphProps.Graph.width / this.d3Service.d3.max(this.cumulative.data, d => d.t) + 1;
+    // Création des barres
+    this.bars = this.linechartSvg.append('g')
+      .selectAll('rect')
+      .data(this.cumulative.data)
+      .enter().append('rect')
+      .attr('fill', 'lightgray')
+      .attr('opacity', 0)
+      .attr('stroke-width', 0)
+      .attr('x', 1)
+      .attr('transform', d => `translate(${+this.graphProps.x(d.t) - barWidth / 2}, ${this.graphProps.y(d.n)})`)
+      .attr('width', barWidth)
+      .attr('height', d => this.graphProps.Graph.height - +this.graphProps.y(d.n) )
+      .on('mouseover', (d) => this.mouseover(d))
+      .on('mouseleave', (d) => this.mouseout(d));
+
+    this.createCumulative();
+    this.createDensity();
+    this.addLegend();
+  }
+
+  private createCumulative(): void {
+    // Création de la courbe cumulative
+    this.linechartSvg.append('path')
+      .datum(this.cumulative.data)
+      .attr('fill', 'none')
+      .attr('stroke', this.colors[0])
+      .attr('stroke-width', 2)
+      .attr('d', this.d3Service.d3.line()
+        .curve(this.d3Service.d3.curveMonotoneX)
+        .x((d) => this.graphProps.x(d.t))
+        .y((d) => this.graphProps.y(d.n)));
+
+    // Ajout des points associés à la courbe cumulative
+    this.cumulativePoints = this.linechartSvg.append('g')
+      .selectAll('dot')
+      .data(this.cumulative.data)
       .enter()
-      .append('rect')
-      .attr('class', 'button')
-      .attr('rx', 5)
-      .attr('ry', 5)
-      .attr('transform', (d, i: number) => `translate(${i * (Buttons.buttonWidth + Buttons.space)}, ${0})`)
-      .attr('width', Buttons.buttonWidth)
-      .attr('height', Buttons.buttonHeight);
-    this.buttonGroup.selectAll('text')
-      .data(datasets)
-      .enter()
-      .append('text')
-      .attr('transform', (d, i: number) =>
-        `translate(${i * (Buttons.buttonWidth + Buttons.space) + Buttons.buttonWidth / 2}, ${Buttons.buttonHeight / 2 + 4})`)
+      .append('circle')
+      .attr('cx', (d) => this.graphProps.x(d.t))
+      .attr('cy', (d) => this.graphProps.y(d.n))
       .attr('pointer-events', 'none')
-      .attr('text-anchor', 'middle')
-      .text((d: string) => d);
+      .attr('r', 0)
+      .attr('fill', this.colors[0])
+      .on('mouseover', (d) => this.mouseover(d))
+      .on('mouseleave', (d) => this.mouseout(d));
 
-    this.crackedGroup = this.heatmapSvg.append('g')
-      .attr('id', 'cracked')
-      .attr('transform', `translate(${Cracked.left}, ${Cracked.top})`);
-    this.crackedGroup.append('text')
-      .attr('id', 'count')
-      .attr('transform', `translate(${Cracked.animate.position.left}, ${Cracked.animate.position.top + 50})`);
-    this.crackedGroup.append('rect')
-      .attr('class', 'button')
-      .attr('width', Buttons.buttonWidth + 30)
-      .attr('height', Buttons.buttonHeight);
-      // .attr('transform', (d,i) => `translate(${Cracked.animate.position.left}, ${Cracked.animate.position.top})`);
-    this.crackedGroup.append('text')
-      .attr('id', 'buttonText')
-      .attr('transform', `translate(${Cracked.animate.position.left + (Buttons.buttonWidth + 30) / 2},
-                                    ${Cracked.animate.position.top + Buttons.buttonHeight / 2 + 4})`)
-      .attr('text-anchor', 'middle')
-      .attr('pointer-events', 'none')
-      .text('Animer');
+    // Ajout de la ligne indiquant le 95%
+    this.linechartSvg.append('line')
+      .attr('x1', 0)
+      .attr('y1', this.graphProps.y(0.95))
+      .attr('x2', this.graphProps.Graph.width )
+      .attr('y2', this.graphProps.y(0.95))
+      .attr('stroke-width', 0.5)
+      .attr('stroke', 'black');
+      // Text associé à la limite 95%
+    this.linechartSvg.append('text')
+      .attr('transform', () => `translate(${this.graphProps.Graph.width + 10}, ${this.graphProps.y(0.95)})`)
+      .text('95% ');
 
-    this.heatmapGroup = this.heatmapSvg.append('g')
-      .attr('id', 'heatmap')
-      .attr('transform', `translate(${this.heatmapProps.Heatmap.left}, ${this.heatmapProps.Heatmap.top})`);
-
-    const legend = this.heatmapSvg.append('g')
-      .attr('id', 'legend')
-      .attr('transform', `translate(${Legend.left}, ${Legend.top})`);
-    legend.append('text')
-      .text('Légende')
-      .attr('transform', `translate(${0}, ${-15})`);
-
-    legend.append('g').selectAll('.legendBar')
-      .data(domain)
-      .enter()
-      .append('rect')
-      .attr('class', 'legendBar')
-      .attr('transform', (d, i: number) => `translate(${0}, ${(colors.length - i - 1) * Legend.barHeight})`)
-      .attr('width', Legend.barWidth)
-      .attr('height', Legend.barHeight)
-      .attr('fill', (d) => this.heatmapProps.color(d));
-
-    legend.append('g').selectAll('text')
-      .data(domain)
-      .enter()
-      .append('text')
-      .attr('transform', (d, i) =>
-        `translate(${Legend.barWidth + 5}, ${(colors.length - i - 1) * Legend.barHeight + Legend.barHeight / 2 + 5})`)
-      .text((d) => `≤ ${this.d3Service.getFormattedNumber(d)}`);
-
-    // tooltip
-    tip = d3Tip().attr('class', 'd3-tip').offset([-10, 0]);
-    tip.html((d: TickValue) => this.d3Service.getFormattedNumber(d.value));
+    // Fait saillant
+    this.text = this.linechartSvg.append('text')
+      .attr('class', 'highlight')
+      .attr('transform', d => `translate(${this.graphProps.Graph.width / 2}, ${this.graphProps.Graph.height / 2})`)
+      .text(`95% des mots de passes sont décryptés en moins de
+        ${this.formatMinutes(this.d3Service.d3.max(this.cumulative.data, d => d.t))} minutes!`);
   }
 
-  public createHeatmap(): void {
-    const data_init = 'seconds';
-    this.buttonGroup.selectAll('.button')
-      .filter(d => d === data_init)
-      .attr('class', 'button selected');
-    this.heatmap(this.data.data[data_init], data_init);
-
-    let lastSelection = data_init;
-    this.buttonGroup.selectAll('.button')
-      .on('click', d => {
-        lastSelection = d;
-        this.buttonGroup.selectAll('.button')
-          .attr('class', e => d === e ? 'button selected' : 'button');
-        this.heatmap(this.data.data[d], d);
-      });
-
-    this.crackedGroup.select('.button')
-      .on('click', () => {
-        if (this.isAnimating) {
-          this.heatmap(this.data.data[lastSelection], lastSelection);
-        }
-        else {
-          this.animate(this.data.data[lastSelection], lastSelection);
-        }
-      });
+  private createDensity(): void {
+    // courbe
+    this.linechartSvg.append('path')
+    .datum(this.density.data)
+    .attr('fill', 'none')
+    .attr('stroke', this.colors[1])
+    .attr('stroke-width', 2)
+    .attr('d', this.d3Service.d3.line()
+        .curve(this.d3Service.d3.curveMonotoneX)
+        .x((d) => this.graphProps.x(d.t))
+        .y((d) => this.graphProps.y(d.n))
+        );
+    // Point
+    this.densityPoints = this.linechartSvg.append('g')
+        .selectAll('dot')
+        .data(this.density.data)
+        .enter()
+        .append('circle')
+        .attr('cx', (d) => this.graphProps.x(d.t))
+        .attr('cy', (d) => this.graphProps.y(d.n))
+        .attr('pointer-events', 'none')
+        .attr('r', 0)
+        .attr('fill', this.colors[1])
+        .on('mouseover', (d) => this.mouseover(d))
+        .on('mouseleave', (d) => this.mouseout(d));
   }
 
-  private heatmap(data, unit): void {
-    this.reset();
-    const MaxBarWidth = 20;
-    const space = (this.heatmapProps.width - this.heatmapProps.Heatmap.left - this.heatmapProps.Heatmap.right);
-    this.heatmapProps.Heatmap.barWidth = space / data.length > MaxBarWidth ? MaxBarWidth : space / data.length;
+  private addLegend(): void {
+    // Finalement, on ajoute une légende
+    const legend = this.linechartSvg.append('g')
+        .attr('class', 'legend')
+        .attr('transform', `translate(${this.graphProps.Legend.left - 100}, ${this.graphProps.Legend.top})`);
+    legend.append('rect')
+        .attr('width', '140px')
+        .attr('height', '70px')
+        .attr('fill', '#fff')
+        .attr('stroke-width', '0.5px')
+        .attr('stroke', 'gray');
 
-    // Suppression des rectangles
-    this.heatmapGroup.selectAll('.bordered').remove();
+    // Légende pour le cumulatif
+    const cumulativeLegend = legend.append('g')
+        .attr('transform', `translate(${10}, ${10})`);
+    cumulativeLegend.append('rect')
+        .attr('class', 'legend')
+        .attr('width', '10px')
+        .attr('height', '10px')
+        .attr('fill', this.colors[0])
+        .attr('stroke-width', '0.5px')
+        .attr('stroke', 'gray')
+        .attr('transform', `translate(${10}, ${10})`);
+    cumulativeLegend.append('text')
+        .text('Cumulatif')
+        .attr('transform', `translate(${30}, ${20})`);
 
-    // update heatmap 1D
-    this.bars = this.heatmapGroup.selectAll('.bar').data(data);
-    // Mise à jour des unités
-    this.setunits(data, unit);
-
-    this.bars.enter().append('rect')
-      .attr('transform', (d, i) => `translate(${i * this.heatmapProps.Heatmap.barWidth}, ${0}) rotate(0)`)
-      .attr('class', 'bordered')
-      .attr('width', this.heatmapProps.Heatmap.barWidth)
-      .attr('height', this.heatmapProps.Heatmap.barHeight)
-      .on('mouseover', tip.show)
-      .on('mouseout', tip.hide)
-      .style('fill', d => this.heatmapProps.color(d.value));
-    this.crackedGroup.select('#count')
-      .text(d => `Nombre de mot de passe déchiffré :
-        ${this.d3Service.getFormattedNumber(this.d3Service.d3.sum(data, d2 => d2.value))} après ${data.length - 1} ${unit}`);
-    this.heatmapSvg.call(tip);
+    // Légende pour la densité
+    const density = legend.append('g')
+        .attr('transform', `translate(${10}, ${30})`);
+    density.append('rect')
+        .attr('class', 'legend')
+        .attr('width', '10px')
+        .attr('height', '10px')
+        .attr('fill', this.colors[1])
+        .attr('stroke-width', '0.5px')
+        .attr('stroke', 'gray')
+        .attr('transform', `translate(${10}, ${10})`);
+    cumulativeLegend.append('text')
+            .text('Densité')
+            .attr('transform', `translate(${30}, ${40})`);
   }
 
-  private animate(data, unit): void {
-    this.reset();
-
-    this.isAnimating = true;
-    this.crackedGroup.select('#buttonText').text('Arrêter l\'animation');
-    // Mise à jour des barres
-    let c = 0;
-    this.bars.enter().append('rect')
-      .attr('transform', (d, i) => `translate(${i * this.heatmapProps.Heatmap.barWidth}, ${0}) rotate(0)`)
-      .attr('class', 'bordered')
-      .attr('width', this.heatmapProps.Heatmap.barWidth)
-      .attr('height', this.heatmapProps.Heatmap.barHeight)
-      .on('mouseover', () => tip.show)
-      .on('mouseout', () => tip.hide)
-      .style('fill', () => this.heatmapProps.color(1))
-      .transition().duration(300)
-      .delay((d, i: number) => {
-        const delay = i * 100;
-        this.timeouts.push(setTimeout(() => {
-            c += d.value;
-            this.crackedGroup.select('#count').text(() =>
-              `Nombre de mot de passe déchiffré : ${this.d3Service.getFormattedNumber(c)} après ${i} ${unit}`);
-            if (i === data.length) {
-              this.isAnimating = false;
-            }
-        }, delay));
-        return delay;
-      })
-      .style('fill', d => this.heatmapProps.color(d.value));
-    this.heatmapGroup.call(tip);
+  // Formattage
+  private formatMinutes(secondes): string {
+      const decimalFormat = this.d3Service.d3.format('02');
+      const minutes = secondes % 60;
+      return `${Math.floor(secondes / 60)}:${decimalFormat(secondes % 60)}`;
   }
 
-  private setunits(data, unit): void {
-    this.heatmapGroup.selectAll('.timeLabel')
-      .remove()
-      .exit()
-      .data(data)
-      .enter()
-      .filter((d, i: number) => i % 5 === 0)
-      .append('text')
-      .text((d: TickValue) => `${d.t}`)
-      .style('text-anchor', 'left')
-      .attr('transform', (d, i) =>
-        `translate( ${(this.heatmapProps.Heatmap.barWidth / 2) + i * 5 * this.heatmapProps.Heatmap.barWidth - 5},
-                    ${this.heatmapProps.Heatmap.barHeight + 15})`)
-      .attr('class', (d, i) => ((i >= 7 && i <= 16) ? 'timeLabel mono axis axis-worktime' : 'timeLabel mono axis'));
-
-    /*heatmapGroup.select('text')
-        //.attr('transform', (d, i) => `translate(${width}, ${-15})`)
-        //.transition()
-        //.duration(650)
-        .text(d => unit)
-        .attr('transform', (d, i) => `translate(${0}, ${-15})`)*/
+  /**
+   * Affiche les cercles et la barre associé à l'élément survoler
+   * @param {*} d
+   */
+  private mouseover(d): void {
+    const cumulative = this.cumulativePoints.filter(p => p.t === d.t);
+    const density = this.densityPoints.filter(p => p.t === d.t);
+    const bar = this.bars.filter(p => p.t === d.t);
+    bar.attr('opacity', 1);
+    cumulative.attr('r', 6);
+    density.attr('r', 6);
+    this.text.text(`${this.d3Service.getFormattedPercent(d.n)} des mots de passes
+      sont déchiffés en moins de ${this.formatMinutes(d.t)} minutes!`);
   }
-
-  private clearTimeouts(): void {
-    this.timeouts.forEach(t => {
-      clearTimeout(t);
-    });
-  }
-
-  private reset(): void {
-    this.clearTimeouts();
-    this.isAnimating = false;
-    this.crackedGroup.select('#buttonText').text('Animer');
+  /**
+   *  Fait disparaitre les cercles et la barre associé à l'élément survoler
+   * @param {*} d
+   */
+  private mouseout(d) {
+      const cumulative = this.cumulativePoints.filter(p => p.t === d.t);
+      const bar = this.bars.filter(p => p.t === d.t);
+      cumulative.attr('r', 0);
+      const density = this.densityPoints.filter(p => p.t === d.t);
+      density.attr('r', 0);
+      bar.attr('opacity', 0);
   }
 }
