@@ -370,7 +370,7 @@ export class CalendarHeatmapComponent implements OnInit {
                       .attr('height', _this.calendarProps.smallCaseHeight)
                       .attr('x', +rectD3Wrapper.attr('x') - 2)
                       .attr('y', +rectD3Wrapper.attr('y') - 2)
-                      .attr('stroke', 'none');
+                      .attr('stroke-width', 1);
 
                     _this.hideTooltip();
                   }
