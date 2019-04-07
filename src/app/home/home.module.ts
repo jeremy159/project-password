@@ -17,6 +17,7 @@ import { CustomPasswordComponent } from './custom-password/custom-password.compo
 import { ShieldIconComponent } from './custom-password/shield-icon/shield-icon.component';
 import { CalendarHeatmapComponent } from './calendar-heatmap/calendar-heatmap.component';
 import { OneYearHeatmapComponent } from './one-year-heatmap/one-year-heatmap.component';
+import { PasswordLengthBarchartComponent } from './password-length-barchart/password-length-barchart.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +32,8 @@ import { OneYearHeatmapComponent } from './one-year-heatmap/one-year-heatmap.com
     CustomPasswordComponent,
     ShieldIconComponent,
     CalendarHeatmapComponent,
-    OneYearHeatmapComponent
+    OneYearHeatmapComponent,
+    PasswordLengthBarchartComponent
   ],
   imports: [
     CommonModule,
