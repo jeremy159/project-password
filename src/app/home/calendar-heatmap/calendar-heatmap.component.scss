@@ -2,8 +2,19 @@
     display: block;
     position: relative;
 
-    rect:hover {
-        cursor: pointer;
+    rect {
+        &:hover {
+            cursor: pointer;
+        }
+    }
+
+    circle.close-button {
+        opacity: 0.8;
+
+        &:hover {
+            opacity: 1.0;
+            cursor: pointer;
+        }
     }
 
     .tooltip {

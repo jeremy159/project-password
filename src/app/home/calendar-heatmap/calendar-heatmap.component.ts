@@ -25,6 +25,7 @@ export class CalendarHeatmapComponent implements OnInit {
   private svgElement: any;
   private tooltip: any;
   private target: any;
+  private monthTarget: any;
   private calendarProps: CalendarProperties =
     { color: undefined, caseWidth: 80, caseHeight: 30, colorRange: [], smallCaseWidth: 20, smallCaseHeight: 20 };
   private yearsMatrix: YearOccurrence[][];
@@ -175,14 +176,6 @@ export class CalendarHeatmapComponent implements OnInit {
 
     const years = this.svgElement.selectAll('rect');
     const _this = this;
-    // years.on('mouseout', function () {
-    //   _this.d3Service.d3.select(this)
-    //     .attr('rect', 50)
-    //     .style('opacity', 0.8)
-    //     .attr('width', _this.calendarProps.caseWidth)
-    //     .attr('height', _this.calendarProps.caseHeight)
-    //     .style('cursor', 'default');
-    // });
 
     years.on('click', function (d: YearOccurrence) {
       aYearSvg.remove();
@@ -193,9 +186,6 @@ export class CalendarHeatmapComponent implements OnInit {
         .attr('height', 1000)
         .attr('position', 'absolute');
 
-      _this.d3Service.d3.select(this)
-        .attr('width', _this.calendarProps.caseWidth - 4)
-        .attr('height', _this.calendarProps.caseHeight - 4);
       if (d.occurrence !== 0) {
         _this.d3Service.d3.csv('/data/donnees_traitees/years/' + d.year + '.csv').then(function (formatted_dates_data) {
           const selectedYearData = _this.getYearData(d.year, formatted_dates_data);
@@ -205,7 +195,6 @@ export class CalendarHeatmapComponent implements OnInit {
           selectedYearData.forEach(element => {
               element.forEach(day => {
                 if (max < day.occurrence) {
-                  console.log(max);
                   max = day.occurrence;
                 }
                 if (min > day.occurrence && day.occurrence !== 0) {
@@ -228,6 +217,7 @@ export class CalendarHeatmapComponent implements OnInit {
                 .data(row)
                 .enter()
                 .append('rect')
+                .attr('id', (d2: string, j: number) => `months-rect${i}-${j}`)
                 .attr('fill', (d2) => {
                   if (d2.occurrence !== 0) {
                     return _this.calendarProps.color(d2.occurrence);
@@ -235,8 +225,8 @@ export class CalendarHeatmapComponent implements OnInit {
                     return '#FFFFFF';
                   }
                 })
-                .attr('width', 20)
-                .attr('height', 20)
+                .attr('width', _this.calendarProps.smallCaseWidth)
+                .attr('height', _this.calendarProps.smallCaseHeight)
                 .attr('x', (d2, j: number) => {
                   if (j > 7 && j < 39) {
                     if (i < 3) {
@@ -276,53 +266,8 @@ export class CalendarHeatmapComponent implements OnInit {
                   } else {
                     return 0;
                   }
-                })
-                .on('mouseover', function (d2: any, j: number) {
-                  if (d.occurrence > 0) {
-                    this.dataset.previousX = this.x.baseVal.valueAsString;
-                    this.dataset.previousY = this.y.baseVal.valueAsString;
-
-                    _this.d3Service.d3.select(this)
-                      .attr('width', () => _this.calendarProps.smallCaseWidth - 4)
-                      .attr('height', () => _this.calendarProps.smallCaseHeight - 4)
-                      .attr('x', this.x.baseVal.value + 2)
-                      .attr('y', this.y.baseVal.value + 2);
-
-                    _this.d3Service.d3.select(`#dayText${i}-${j}`)
-                      .attr('x', function () {
-                        return this.x.baseVal[0].value + 2;
-                      })
-                      .attr('y', function () {
-                        return this.y.baseVal[0].value + 2;
-                      });
-                    _this.showTooltip(d2);
-                  }
-                })
-                .on('mouseout', function (d2: any, j: number) {
-                  if (this.dataset.previousX && this.dataset.previousY) {
-                    _this.d3Service.d3.select(this)
-                      .attr('width', () => _this.calendarProps.smallCaseWidth)
-                      .attr('height', () => _this.calendarProps.smallCaseHeight)
-                      .attr('x', this.dataset.previousX)
-                      .attr('y', this.dataset.previousY);
-
-                    _this.d3Service.d3.select(`#dayText${i}-${j}`)
-                      .attr('x', function () {
-                        return this.x.baseVal[0].value - 2;
-                      })
-                      .attr('y', function () {
-                        return this.y.baseVal[0].value - 2;
-                      });
-                    _this.hideTooltip();
-                  }
                 });
-            });
 
-          aYearSvg.selectAll('text')
-            .data(selectedYearData)
-            .enter()
-            .append('g')
-            .each(function (row, i: number) {
               _this.d3Service.d3.select(this)
                 .selectAll('text')
                 .data(row)
@@ -385,36 +330,82 @@ export class CalendarHeatmapComponent implements OnInit {
                   }
                 })
                 .attr('fill', 'black');
+            })
+            .on('mouseover', () => {
+              _this.monthTarget = _this.d3Service.d3.event.path[0];
+              if (_this.monthTarget.nodeName === 'text') {
+                _this.monthTarget = _this.d3Service.d3.event.fromElement;
+              }
+              const rectD3Wrapper = _this.d3Service.d3.select(_this.monthTarget);
+
+              if (rectD3Wrapper.attr('id') && rectD3Wrapper.attr('id').split('rect')[1]) {
+                const [strI, strJ] = rectD3Wrapper.attr('id').split('rect')[1].split('-');
+                const [i, j] = [parseInt(strI, 10), parseInt(strJ, 10)];
+
+                if (selectedYearData[i][j].occurrence > 0) {
+                  // Rect
+                  rectD3Wrapper.attr('width', _this.calendarProps.smallCaseWidth - 4)
+                    .attr('height', _this.calendarProps.smallCaseHeight - 4)
+                    .attr('x', +rectD3Wrapper.attr('x') + 2)
+                    .attr('y', +rectD3Wrapper.attr('y') + 2)
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 2);
+
+                  _this.showTooltip(selectedYearData[i][j], false);
+                }
+              }
+            })
+            .on('mouseout', () => {
+              if (_this.monthTarget) {
+                const rectD3Wrapper = _this.d3Service.d3.select(_this.monthTarget);
+
+                if (rectD3Wrapper.attr('id') && rectD3Wrapper.attr('id').split('rect')[1]) {
+                  const [strI, strJ] = rectD3Wrapper.attr('id').split('rect')[1].split('-');
+                  const [i, j] = [parseInt(strI, 10), parseInt(strJ, 10)];
+
+                  if (selectedYearData[i][j].occurrence > 0) {
+                    // Rect
+                    rectD3Wrapper.attr('width', _this.calendarProps.smallCaseWidth)
+                      .attr('height', _this.calendarProps.smallCaseHeight)
+                      .attr('x', +rectD3Wrapper.attr('x') - 2)
+                      .attr('y', +rectD3Wrapper.attr('y') - 2)
+                      .attr('stroke', 'none');
+
+                    _this.hideTooltip();
+                  }
+                }
+              }
             });
 
           _this.addLegend(aYearSvg, min, max, 0, 10);
 
-          aYearSvg.append('circle')
-            .attr('class', 'but')
-            .attr('cx', 650)
-            .attr('cy', 30)
-            .attr('r', 20)
-            .style('fill', '#1E60AE')
-            .style('opacity', 0.8);
+          // Header
+          const header = aYearSvg.append('g')
+            .attr('transform', 'translate(520, 35)');
 
-          aYearSvg.append('text')
-            .attr('class', 'but')
+          // Title
+          header.append('text')
+            .text(`Année: ${d.year}`)
+            .style('font-size', '20px');
+
+          // Close button
+          header.append('circle')
+            .attr('class', 'close-button')
+            .attr('cx', 150)
+            .attr('cy', -5)
+            .attr('r', 20)
+            .style('fill', '#1E60AE');
+
+          header.append('text')
+            .attr('class', 'close-button')
             .text('x')
             .style('font-size', '20px')
-            .attr('transform', 'translate(645, 35)')
+            .attr('transform', 'translate(145, 0)')
             .attr('fill', 'white');
 
-          const button = _this.d3Service.d3.selectAll('circle');
+          const button = _this.d3Service.d3.selectAll('circle.close-button');
           button.on('click', () => {
             aYearSvg.remove();
-          });
-          button.on('mouseover', function () {
-            _this.d3Service.d3.select(this)
-              .style('opacity', 1)
-              .style('cursor', 'pointer');
-          });
-          button.on('mouseout', function () {
-            _this.d3Service.d3.select(this).style('opacity', 0.8);
           });
         });
       }
@@ -608,8 +599,8 @@ export class CalendarHeatmapComponent implements OnInit {
     return `<strong>Occurrences:</strong> ${this.d3Service.getFormattedNumber(d.occurrence)}`;
   }
 
-  private showTooltip(d: YearOccurrence): void {
-    const rect = this.target.getBoundingClientRect();
+  private showTooltip(d: YearOccurrence, onYearsCalendar: boolean = true): void {
+    const rect = (onYearsCalendar ? this.target : this.monthTarget).getBoundingClientRect();
     const hostElem = this.heatmapElement.nativeElement.getBoundingClientRect();
     const tooltip = document.getElementById('calendar-tooltip').getBoundingClientRect();
     this.tooltip.style('left', () => {
