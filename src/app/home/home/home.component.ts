@@ -22,6 +22,7 @@ export class HomeComponent implements OnInit {
   public keyboardOccurrencesHeatmapData$: Observable<[KeyboardOccurrence[], KeyboardOccurrence[], KeyboardOccurrence[]]>;
   public passwordCrackingHeatmapData$: Observable<any>;
   public calendarHeatmapData$: Observable<YearOccurrence[]>;
+  public oneYearCalendarHeatmapData$: Observable<any>;
 
   constructor(private restApiService: RestAPIService) { }
 
@@ -33,6 +34,7 @@ export class HomeComponent implements OnInit {
     this.initializeDiversityDonutComponent();
     this.initializePasswordCrackingHeatmapComponent();
     this.initializeCalendarHeatmapComponent();
+    this.initializeOneYearCalendarHeatmapComponent();
   }
 
   public initializeKeyboardOccurrencesComponent(): void {
@@ -68,5 +70,9 @@ export class HomeComponent implements OnInit {
 
   public initializeCalendarHeatmapComponent(): void {
     this.calendarHeatmapData$ = this.restApiService.getRequest<YearOccurrence[]>('annees.csv', true);
+  }
+
+  public initializeOneYearCalendarHeatmapComponent(): void {
+    this.oneYearCalendarHeatmapData$ = this.restApiService.getRequest<any>('jourMois_formatted.csv', true);
   }
 }

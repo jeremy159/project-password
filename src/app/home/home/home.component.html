@@ -11,6 +11,10 @@
     *ngIf="calendarHeatmapData$ | async as calendarHeatmapData"
     [data]="calendarHeatmapData">
 </pp-calendar-heatmap>
+<pp-one-year-heatmap
+    *ngIf="oneYearCalendarHeatmapData$ | async as oneYearCalendarHeatmapData"
+    [data]="oneYearCalendarHeatmapData">
+</pp-one-year-heatmap>
 <pp-password-treemap
     *ngIf="passwordTreemapData$ | async as passwordTreemapData"
     [data]="passwordTreemapData">

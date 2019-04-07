@@ -93,7 +93,7 @@ export class CalendarHeatmapComponent implements OnInit {
 
   public createYearsHeatMap(): void {
     const _this = this;
-    this.svgElement.selectAll('rect')
+    this.svgElement.selectAll('rect.years-rects')
       .data(this.yearsMatrix)
       .enter()
       .append('g')
@@ -104,6 +104,7 @@ export class CalendarHeatmapComponent implements OnInit {
           .enter()
           .append('rect')
           .attr('id', (d: string, j: number) => `years-rect${i}-${j}`)
+          .attr('class', 'years-rects')
           .attr('fill', (d: YearOccurrence) => _this.calendarProps.color(d.occurrence))
           .attr('width', _this.calendarProps.caseWidth)
           .attr('height', _this.calendarProps.caseHeight)
