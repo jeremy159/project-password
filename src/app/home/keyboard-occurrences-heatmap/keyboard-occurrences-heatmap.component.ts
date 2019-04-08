@@ -187,7 +187,7 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
           .enter()
           .append('rect')
           .attr('id', (d: string, j: number) => `${type}-rect${i}-${j}`)
-          .attr('fill', (d: KeyboardOccurrence) => d.occurrence !== 0 ? _this.heatmapProps.color(d.occurrence) : 'grey')
+          .attr('fill', (d: KeyboardOccurrence) => d.occurrence !== 0 ? _this.heatmapProps.color(d.occurrence) : '#E0E0E0')
           .attr('width', _this.heatmapProps.keyWidth)
           .attr('height', _this.heatmapProps.keyHeight)
           .attr('x', (d: KeyboardOccurrence, j: number) => _this.heatmapProps.keyboardX + i * 20 + j * (_this.heatmapProps.keyWidth + 3))
@@ -350,13 +350,13 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
       .attr('y', 89)
       .attr('width', 20)
       .attr('height', 20)
-      .attr('fill', 'grey');
+      .attr('fill', '#E0E0E0');
 
     svg.append('text')
       .text('Ces caractères ne sont pas pris en compte dans ce contexte ')
       .attr('x', 25)
       .attr('y', 105)
-      .attr('fill', 'grey');
+      .attr('fill', 'black');
 
     const y = this.d3Service.d3.scaleLinear()
       .range([w, 0])
