@@ -10,11 +10,15 @@
 
 body {
     margin: 0;
-    min-height: calc(100vh + 400px);
+
+    * {
+        font-family: 'Open Sans', sans-serif;
+    }
 
     .component {
         position: relative;
-        height: 100vh;
+        height: 100%;
+        min-height: 100vh;
         width: 100%;
 
         & > :not(.descriptive-text-region) {
@@ -23,33 +27,32 @@ body {
 
         .descriptive-text-region {
             width: 100%;
-            // position: absolute;
-            // left: 0;
-            // right: 0;
             margin: 0 auto;
-            // position: relative;
-            // left: 50%;
-            // right: 50%;
-            // margin-left: -50vw;
-            // margin-right: -50vw;
-            height: $descriptive-text-height;
+            height: auto;
             background-color: #F5F5F5;
 
             .text {
                 max-width: 800px;
-                padding: 24px;
+                padding: 12px;
                 margin: 0 auto;
+
+                :first-child {
+                    margin-top: 0;
+                }
+        
+                :last-child {
+                    margin-bottom: 0;
+                }
             }
         }
 
         .component-content {
             position: relative;
-            height: calc(100vh - #{$descriptive-text-height});
+            min-height: calc(100vh - #{$descriptive-text-height});
         }
     }
 
     .d3-tip {
-        font-family: 'Open Sans', sans-serif;
         font-size: 12px;
         line-height: 1;
         font-weight: bold;
