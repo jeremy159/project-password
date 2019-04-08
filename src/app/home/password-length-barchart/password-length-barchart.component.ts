@@ -189,7 +189,7 @@ export class PasswordLengthBarchartComponent implements OnInit {
       const x = rect.left + rect.width / 2 - tooltip.width / 2 - offset;
       return `${x}px`;
     }).style('top', () => {
-      const padding = 30;
+      const padding = 20;
       const y = rect.top - hostElem.top - tooltip.height + padding;
       return `${y}px`;
     });
