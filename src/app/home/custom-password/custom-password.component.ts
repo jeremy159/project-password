@@ -79,12 +79,12 @@ export class CustomPasswordComponent implements OnInit {
       this.crackingTime = '';
       return;
     }
-    if (value.crack_times_display.offline_fast_hashing_1e10_per_second === 'less than a second') {
+    if (value.crack_times_display.offline_slow_hashing_1e4_per_second === 'less than a second') {
       this.crackingTime = 'moins d\'une seconde';
     }
     else {
       this.crackingTime =
-        (value.crack_times_display.offline_fast_hashing_1e10_per_second as string).replace(/second/g, 'seconde')
+        (value.crack_times_display.offline_slow_hashing_1e4_per_second as string).replace(/second/g, 'seconde')
           .replace(/seconds/g, 'secondes')
           .replace(/hours/g, 'heures')
           .replace(/hour/g, 'heure')
