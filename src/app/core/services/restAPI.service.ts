@@ -11,7 +11,7 @@ const headers = new HttpHeaders().set('Content-Type', 'application/json');
 })
 export class RestAPIService {
 
-  private serverBaseUrl = 'http://localhost:3000/';
+  private serverBaseUrl = 'https://project-password-server.herokuapp.com/';
   private localBaseUrl = '/data/donnees_traitees/';
 
   constructor(private http: HttpClient,

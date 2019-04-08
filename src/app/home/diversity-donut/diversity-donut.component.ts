@@ -129,8 +129,8 @@ export class DiversityDonutComponent implements OnInit {
 
   private initialize(): void {
     /* SVG ELEMENT */
-    const width = 700;
-    const height = 400;
+    const width = 500;
+    const height = 350;
     this.donutProps.legendRectXPos = this.donutProps.donutXPos + 180;
     this.donutProps.legendRectYPos = 70;
     this.donutProps.legendTextXPos = this.donutProps.donutXPos + 223;

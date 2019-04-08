@@ -1,2 +1,22 @@
-<div #heatmap>
+<div class="component">
+    <div class="descriptive-text-region">
+        <div class="text">
+            <p>
+                Les 10 000 000 de mots de passes contiennent-ils des dates ?
+                Sous forme de carte de chaleur, nous avons fait ressortir les années contenues dans les mot de passe.
+            </p>
+            <p>
+                Fonctionnement: <br/>
+                Au survol de la souris, l'occurrence de l'année apparaît. 
+                Au clique, sous forme de carte de chaleur, le calendrier respectif de l'année apparaît
+                avec les dates qui ont été utilisées pour créer les mots de passe. Encore une fois, 
+                au survol de la souris sur un jour en particulier, nous obtenons le nombre d'utilisations
+                de cette date dans un mot de passe. En légende, nous avons l'intervalle du nombre d'utilisations
+                sur lequel se base chaque carte de chaleur.
+            </p>
+        </div>
+    </div>
+    <div class="component-content" fxLayout="row" fxLayoutAlign="center center">
+        <div #heatmap></div>
+    </div>
 </div>

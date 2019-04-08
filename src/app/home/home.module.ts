@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatTableModule, MatSortModule } from '@angular/material';
+import { MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatTableModule, MatSortModule, MatProgressSpinnerModule } from '@angular/material';
 
 import { HomeComponent } from './home/home.component';
 import { TopPageComponent } from './top-page/top-page.component';
@@ -17,6 +17,7 @@ import { CustomPasswordComponent } from './custom-password/custom-password.compo
 import { ShieldIconComponent } from './custom-password/shield-icon/shield-icon.component';
 import { CalendarHeatmapComponent } from './calendar-heatmap/calendar-heatmap.component';
 import { OneYearHeatmapComponent } from './one-year-heatmap/one-year-heatmap.component';
+import { PasswordLengthBarchartComponent } from './password-length-barchart/password-length-barchart.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +32,8 @@ import { OneYearHeatmapComponent } from './one-year-heatmap/one-year-heatmap.com
     CustomPasswordComponent,
     ShieldIconComponent,
     CalendarHeatmapComponent,
-    OneYearHeatmapComponent
+    OneYearHeatmapComponent,
+    PasswordLengthBarchartComponent
   ],
   imports: [
     CommonModule,
@@ -44,6 +46,7 @@ import { OneYearHeatmapComponent } from './one-year-heatmap/one-year-heatmap.com
     MatInputModule,
     MatTableModule,
     MatSortModule,
+    MatProgressSpinnerModule,
     SharedModule
   ],
   exports: [

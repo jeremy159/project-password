@@ -8,6 +8,8 @@ import { Component, OnInit, Input, ChangeDetectionStrategy } from '@angular/core
 })
 export class ShieldIconComponent implements OnInit {
 
+  @Input() public id: number;
+
   public percentage = 0;
   @Input() public set fillPercentage(value: number) {
     this.percentage = (value < 0) ? 0 : (value > 1) ? 1 : value;
@@ -36,7 +38,7 @@ export class ShieldIconComponent implements OnInit {
       break;
 
       default:
-        this.color = '#d40000'; // red
+        this.color = '#ffffff'; // white
       break;
     }
   }

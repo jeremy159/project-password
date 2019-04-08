@@ -1,2 +1,19 @@
-<div #firstChart #heatmap>
+<div class="component">
+    <div class="descriptive-text-region">
+        <div class="text">
+            <p>
+                Quelles sont les combinaisons de deux lettres/chiffres les plus communes? Les utilisateurs favorisent-ils une proximité 'géométrique'
+                sur le clavier? C'est ce que nous examinons avec cette carte de chaleur interactive.                     
+            </p>
+            <p>
+                Fonctionnement: <br/>
+                Cliquez sur les touches du clavier pour mettre à jour le top 5 des combinaisons 
+                ainsi que la carte de chaleur correspondante. Un ton de rouge plus foncé implique un plus nombre relativement plus grand 
+                de co-occurence avec la lettre sélectionnée.
+            </p>
+        </div>
+    </div>
+    <div class="component-content" fxLayout="row" fxLayoutAlign="center center">
+        <div #firstChart #heatmap></div>
+    </div>
 </div>

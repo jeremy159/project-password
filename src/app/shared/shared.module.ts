@@ -1,16 +1,16 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ScrollToRefDirective } from './scroll-to-ref.directive';
-import { DefearLoadDirective } from './defear-load.directive';
+import { ViewportDetectionDirective } from './viewport-detection.directive';
 
 @NgModule({
-  declarations: [ScrollToRefDirective, DefearLoadDirective],
+  declarations: [ScrollToRefDirective, ViewportDetectionDirective],
   imports: [
     CommonModule
   ],
   exports: [
     ScrollToRefDirective,
-    DefearLoadDirective
+    ViewportDetectionDirective
   ]
 })
 export class SharedModule { }

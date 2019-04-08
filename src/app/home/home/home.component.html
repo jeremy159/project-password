@@ -23,6 +23,10 @@
     *ngIf="passwordNounsChartData$ | async as passwordNounsChartData"
     [data]="passwordNounsChartData">
 </pp-password-nouns-chart>
+<pp-password-length-barchart
+    *ngIf="passwordLengthBarchartData$ | async as passwordLengthBarchartData"
+    [data]="passwordLengthBarchartData">
+</pp-password-length-barchart>
 <pp-diversity-donut
     *ngIf="disersityDonutData$ | async as disersityDonutData"
     [data]="disersityDonutData">

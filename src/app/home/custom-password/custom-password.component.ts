@@ -1,11 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import * as zxcvbn from 'zxcvbn';
-import { Observable, empty } from 'rxjs';
-import { map, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
+import { Observable, empty, of } from 'rxjs';
+import { map, debounceTime, distinctUntilChanged, switchMap, tap, filter, catchError } from 'rxjs/operators';
+import { RestAPIService } from 'src/app/core/services/restAPI.service';
 
 // Fix nécessaire puisque le type ne contient pas le champ password
 interface ZXCVBNResult extends zxcvbn.ZXCVBNResult {
+  password: string;
+}
+
+interface DatabaseRequest {
+  data: [User[], User[], User[], User[]];
+}
+
+interface User {
+  username: string;
   password: string;
 }
 
@@ -19,11 +29,17 @@ export class CustomPasswordComponent implements OnInit {
   public searchField: FormControl;
   public formGroup: FormGroup;
   public shieldFillPercentage: number;
-  public shieldColor: zxcvbn.ZXCVBNScore;
+  public shieldColor: zxcvbn.ZXCVBNScore = 0;
   public crackingTime = '';
-  public searchResult$: Observable<string[]>;
+  public searchResult$: Observable<User[]>;
+  public displayedColumns: string[] = ['username', 'password'];
+  // public data: User[] = [];
+  public isLoadingResults = false;
+  public hasNoResults = false;
+  public hasEncounteredError = false;
 
-  constructor(private fb: FormBuilder) { }
+  constructor(private fb: FormBuilder,
+              private restApiService: RestAPIService) { }
 
   ngOnInit() {
     this.buildForm();
@@ -44,7 +60,13 @@ export class CustomPasswordComponent implements OnInit {
       map((value: ZXCVBNResult) => value.password), // Retenir seulement le mot de passe pour la suite
       debounceTime(400),  // Debounce puisqu'il y a utilisation du réseau après
       distinctUntilChanged(),
-      switchMap(term => this.searchInDatabase(term))  // Recherche dans la base de données
+      filter((value: string) => !!value),
+      switchMap(term => {
+        this.isLoadingResults = true;
+        this.hasNoResults = false;
+        this.hasEncounteredError = false;
+        return this.searchInDatabase(term); // Recherche dans la base de données
+      })
     );
   }
 
@@ -76,7 +98,22 @@ export class CustomPasswordComponent implements OnInit {
     }
   }
 
-  private searchInDatabase(value: string): Observable<string[]> {
-    return empty();
+  private searchInDatabase(value: string): Observable<User[]> {
+    return this.restApiService.getRequest<DatabaseRequest>(`password/${value}`, false, false).pipe(
+      map((results: DatabaseRequest) => {
+        const data: [User[], User[], User[], User[]] = results.data;
+        this.isLoadingResults = false;
+        if (data[0].length === 0 && data[1].length === 0 && data[2].length === 0 && data[3].length === 0) {
+          this.hasNoResults = true;
+          return [];
+        }
+        const resultsConcanated = data[0].concat(data[1], data[2], data[3]);
+        return resultsConcanated.slice(0, 10);
+      }),
+      catchError(() => {
+        this.hasEncounteredError = true;
+        return of([]);
+      })
+    );
   }
 }
