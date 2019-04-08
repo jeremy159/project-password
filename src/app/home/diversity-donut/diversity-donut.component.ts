@@ -21,14 +21,14 @@ interface MatriceElement {
   count: number;
 }
 
-const repartition_colors = ['#1A237E', '#1B5E20',  '#880E4F', '#03A9F4', 'white', 'white'];
+const repartition_colors = ['#304FFE', '#C51162', '#00C853', '#FF6D00', 'white', 'white'];
 const repartition_passwords = ['PASSWORDS', 'PASSWORDS', 'PASSWORDS', 'PASSWORDS'];
 
 const color_matrix = [
   ['#1A237E', '#303F9F', '#3F51B5',  '#7986CB', 'white', 'white'],  // teinte bleu
-  ['#1B5E20', '#388E3C', '#4CAF50', '#81C784', '#C8E6C9', 'white'], // teinte vert
-  ['#880E4F', '#C2185B', '#E91E63', '#F06292', 'white', 'white'],   // teinte rose
-  ['#03A9F4', 'white', 'white', 'white', 'white', 'white']          // teinte bleu ciel
+  ['#880E4F', '#C2185B', '#E91E63', '#F06292', '#F8BBD0', 'white'], // teinte rose
+  ['#1B5E20', '#388E3C', '#4CAF50', '#81C784', 'white', 'white'],   // teinte vert
+  ['#FF6D00', 'white', 'white', 'white', 'white', 'white']          // teinte bleu ciel
 ];
 
 const passwords_matrix = [

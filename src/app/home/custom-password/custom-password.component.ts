@@ -111,6 +111,7 @@ export class CustomPasswordComponent implements OnInit {
         return resultsConcanated.slice(0, 100);
       }),
       catchError(() => {
+        this.isLoadingResults = false;
         this.hasEncounteredError = true;
         return of([]);
       })
