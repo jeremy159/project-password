@@ -63,8 +63,8 @@ export class PasswordTreemapComponent implements OnInit {
         <p class="count">${this.d3Service.getFormattedNumber(d.value)}</p>
       `
       )
-      .style("left", (this.d3Service.d3.event.pageX + 10) + "px")
-      .style("top", (this.d3Service.d3.event.pageY - 50) + "px");
+      .style("left", (this.d3Service.d3.event.layerX + 10) + "px")
+      .style("top", (this.d3Service.d3.event.layerY - 50) + "px");
   }
   public mouseout(): void {
     this.tip.style("display", "none");
@@ -103,7 +103,7 @@ export class PasswordTreemapComponent implements OnInit {
 
     // On ajoute un clipPath pour pas que l'animation du treemap sorte de ses dimensions
     this.d3Service.d3.select('#treemapSvg')
-      .attr('width', '100%')
+      .attr('width', 1200)
       .attr('height', height + treemapMargin.bottom + treemapMargin.top);
 
     this.d3Service.d3.select('#treemapSvg')
