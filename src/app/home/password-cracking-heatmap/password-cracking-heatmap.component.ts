@@ -55,7 +55,7 @@ export class PasswordCrackingHeatmapComponent implements OnInit {
         right: margin.right,
         bottom: margin.bottom,
         left: margin.left,
-        width: 700,
+        width: 800,
         height: 400
     };
     this.graphProps.Legend = {
