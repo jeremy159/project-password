@@ -353,7 +353,7 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
       .attr('fill', 'grey');
 
     svg.append('text')
-      .text('Ces caratères ne sont pas pris en compte dans ce contexte ')
+      .text('Ces caractères ne sont pas pris en compte dans ce contexte ')
       .attr('x', 25)
       .attr('y', 105)
       .attr('fill', 'grey');

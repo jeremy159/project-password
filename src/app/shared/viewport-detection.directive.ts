@@ -1,11 +1,11 @@
 import { Directive, Input, Output, EventEmitter, ElementRef, AfterViewInit } from '@angular/core';
 
 @Directive({
-  selector: '[ppDefearLoad]'
+  selector: '[ppViewportDetection]'
 })
-export class DefearLoadDirective implements AfterViewInit {
+export class ViewportDetectionDirective implements AfterViewInit {
   private intersectionObserver: IntersectionObserver;
-  @Output() private ppDefearLoad: EventEmitter<any> = new EventEmitter();
+  @Output() private ppViewportDetection: EventEmitter<any> = new EventEmitter();
 
   constructor(private elementRef: ElementRef) { }
 
@@ -24,7 +24,7 @@ export class DefearLoadDirective implements AfterViewInit {
   private checkForIntersection(entries: Array<IntersectionObserverEntry>): void {
     entries.forEach((entry: IntersectionObserverEntry) => {
       if (this.isIntersecting(entry)) {
-        this.ppDefearLoad.emit();
+        this.ppViewportDetection.emit();
         this.intersectionObserver.unobserve(this.elementRef.nativeElement);
         this.intersectionObserver.disconnect();
       }
