@@ -11,6 +11,8 @@ interface CalendarProperties {
   colorRange: string[];
   smallCaseWidth: number;
   smallCaseHeight: number;
+  yearXPos: number;
+  yearYPos: number;
 }
 
 @Component({
@@ -27,7 +29,8 @@ export class CalendarHeatmapComponent implements OnInit {
   private target: any;
   private monthTarget: any;
   private calendarProps: CalendarProperties =
-    { color: undefined, caseWidth: 80, caseHeight: 30, colorRange: [], smallCaseWidth: 20, smallCaseHeight: 20 };
+    { color: undefined, caseWidth: 80, caseHeight: 30, colorRange: [],
+      smallCaseWidth: 20, smallCaseHeight: 20, yearXPos: 0, yearYPos: 100 };
   private yearsMatrix: YearOccurrence[][];
 
   constructor(private d3Service: D3Service,
@@ -69,7 +72,7 @@ export class CalendarHeatmapComponent implements OnInit {
 
   private initialize(): void {
     const width = 950;
-    const height = 750;
+    const height = 580;
 
     this.svgElement = this.d3Service.d3.select(this.heatmapElement.nativeElement)
       .append('svg')
@@ -82,7 +85,7 @@ export class CalendarHeatmapComponent implements OnInit {
 
     const [min, max] = this.createMatrix();
     this.calendarProps.color.domain([min, max]);
-    this.addLegend(this.svgElement, min, max, 0, 90);
+    this.addLegend(this.svgElement, min, max, 0, 10);
 
     // Define the div for the tooltip
     this.tooltip = this.d3Service.d3.select(this.heatmapElement.nativeElement).append('div')
@@ -108,8 +111,8 @@ export class CalendarHeatmapComponent implements OnInit {
           .attr('fill', (d: YearOccurrence) => _this.calendarProps.color(Number(d.occurrence)))
           .attr('width', _this.calendarProps.caseWidth)
           .attr('height', _this.calendarProps.caseHeight)
-          .attr('x', (d: YearOccurrence, j: number) => j * _this.calendarProps.caseWidth)
-          .attr('y', () => 250 + i * _this.calendarProps.caseHeight)
+          .attr('x', (d: YearOccurrence, j: number) => _this.calendarProps.yearXPos + j * _this.calendarProps.caseWidth)
+          .attr('y', () => _this.calendarProps.yearYPos + i * _this.calendarProps.caseHeight)
           .attr('stroke', 'white')
           .style('opacity', 0.8);
 
@@ -119,8 +122,8 @@ export class CalendarHeatmapComponent implements OnInit {
           .enter()
           .append('text')
           .attr('id', (d: string, j: number) => `text${i}-${j}`)
-          .attr('x', (d: YearOccurrence, j: number) => j * _this.calendarProps.caseWidth + 18)
-          .attr('y', () => 250 + i * _this.calendarProps.caseHeight + 20)
+          .attr('x', (d: YearOccurrence, j: number) => _this.calendarProps.yearXPos + j * _this.calendarProps.caseWidth + 18)
+          .attr('y', () => _this.calendarProps.yearYPos + i * _this.calendarProps.caseHeight + 20)
           .text((d: YearOccurrence) => d.year)
           .attr('fill', 'black');
       })
