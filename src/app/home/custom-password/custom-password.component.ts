@@ -108,7 +108,7 @@ export class CustomPasswordComponent implements OnInit {
           return [];
         }
         const resultsConcanated = data[0].concat(data[1], data[2], data[3]);
-        return resultsConcanated.slice(0, 10);
+        return resultsConcanated.slice(0, 100);
       }),
       catchError(() => {
         this.hasEncounteredError = true;

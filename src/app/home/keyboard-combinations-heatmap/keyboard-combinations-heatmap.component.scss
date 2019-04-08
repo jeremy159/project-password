@@ -1,4 +1,8 @@
 :host ::ng-deep {
+    text {
+        pointer-events: none;
+    }
+
     rect.key:hover {
         cursor: pointer;
     }

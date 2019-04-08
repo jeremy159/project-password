@@ -1,5 +1,4 @@
-import { Component, OnInit, ElementRef, AfterViewInit, ViewChild, Input, ChangeDetectionStrategy } from '@angular/core';
-import { ScrollRefService } from 'src/app/core/services/scroll-ref.service';
+import { Component, OnInit, ElementRef, ViewChild, Input, ChangeDetectionStrategy } from '@angular/core';
 import { KeyboardCombination } from 'src/app/shared/models/keyboard-combination';
 import { D3Service } from 'src/app/core/services/d3.service';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
@@ -25,9 +24,8 @@ interface ChartPropreties {
   styleUrls: ['./keyboard-combinations-heatmap.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class KeyboardCombinationsHeatmapComponent implements OnInit, AfterViewInit {
+export class KeyboardCombinationsHeatmapComponent implements OnInit {
 
-  @ViewChild('firstChart') private scrollReference: ElementRef;
   @ViewChild('heatmap') private heatmapElement: ElementRef;
   @Input() private data: KeyboardCombination[];
   private svgElement: any;
@@ -38,17 +36,12 @@ export class KeyboardCombinationsHeatmapComponent implements OnInit, AfterViewIn
   private keyboardProps: HeatmapPropreties = {keyWidth: 40, keyHeight: 40, yKey: 50, xKey: 50};
   private barChartPos: {x: number, y: number} = {x: 550, y: 60};
 
-  constructor(private scrollRefService: ScrollRefService,
-              private d3Service: D3Service,
+  constructor(private d3Service: D3Service,
               private preProcessService: PreProcessService) { }
 
   ngOnInit() {
     this.preProcessService.convertNumbers(this.data, ['count']);
     this.formatData();
-  }
-
-  public ngAfterViewInit(): void {
-    this.scrollRefService.scrollElement = this.scrollReference;
   }
 
   private formatData(): void {

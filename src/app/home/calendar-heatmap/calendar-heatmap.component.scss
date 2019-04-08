@@ -2,6 +2,14 @@
     display: block;
     position: relative;
 
+    svg {
+        display: block;
+    }
+
+    text {
+        pointer-events: none;
+    }
+
     rect.years-rects {
         &:hover {
             cursor: pointer;

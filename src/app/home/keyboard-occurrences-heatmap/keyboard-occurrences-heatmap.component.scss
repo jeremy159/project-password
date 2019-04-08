@@ -6,6 +6,10 @@
         display: block;
     }
 
+    text {
+        pointer-events: none;
+    }
+
     .tooltip {
         font-family: 'Open Sans', sans-serif;
         position: absolute;

@@ -1,8 +1,9 @@
-import { Component, OnInit, Input, ElementRef, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, Input, ElementRef, ViewChild, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
 import { KeyboardOccurrence } from 'src/app/shared/models/keyboard-occurrence';
 import { D3Service } from 'src/app/core/services/d3.service';
 import { PreProcessService } from 'src/app/core/services/pre-process.service';
 import d3Tip from 'd3-tip';
+import { ScrollRefService } from 'src/app/core/services/scroll-ref.service';
 
 interface HeatmapPropreties {
   color: d3.ScaleLinear<string, string>;
@@ -20,9 +21,10 @@ type OccurrenceType = 'letters' | 'numbers' | 'specialChars';
   styleUrls: ['./keyboard-occurrences-heatmap.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class KeyboardOccurrencesHeatmapComponent implements OnInit {
+export class KeyboardOccurrencesHeatmapComponent implements OnInit, AfterViewInit {
 
   @Input() private data: [KeyboardOccurrence[], KeyboardOccurrence[], KeyboardOccurrence[]];
+  @ViewChild('firstChart') private scrollReference: ElementRef;
   @ViewChild('heatmap') private heatmapElement: ElementRef;
   private lettersData: KeyboardOccurrence[];
   private numbersData: KeyboardOccurrence[];
@@ -38,7 +40,8 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
   private numbersMatrix: KeyboardOccurrence[][];
   private specialCharsMatrix: KeyboardOccurrence[][];
 
-  constructor(private d3Service: D3Service,
+  constructor(private scrollRefService: ScrollRefService,
+              private d3Service: D3Service,
               private preprocesservice: PreProcessService) { }
 
   ngOnInit() {
@@ -56,6 +59,10 @@ export class KeyboardOccurrencesHeatmapComponent implements OnInit {
     this.createLettersKeyboard();
     this.createNumbersKeyboard();
     this.createSpecialCharsKeyboard();
+  }
+
+  public ngAfterViewInit(): void {
+    this.scrollRefService.scrollElement = this.scrollReference;
   }
 
   private formatData(): void {

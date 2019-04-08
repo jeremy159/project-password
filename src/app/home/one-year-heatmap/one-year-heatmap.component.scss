@@ -2,6 +2,10 @@
     display: block;
     position: relative;
 
+    text {
+        pointer-events: none;
+    }
+
     .tooltip {
         font-family: 'Open Sans', sans-serif;
         position: absolute;

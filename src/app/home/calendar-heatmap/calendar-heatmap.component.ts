@@ -71,7 +71,7 @@ export class CalendarHeatmapComponent implements OnInit {
   }
 
   private initialize(): void {
-    const width = 950;
+    const width = 1000;
     const height = 580;
 
     this.svgElement = this.d3Service.d3.select(this.heatmapElement.nativeElement)
@@ -188,7 +188,7 @@ export class CalendarHeatmapComponent implements OnInit {
         .append('svg')
         .attr('width', 800)
         .attr('height', 1000)
-        .attr('position', 'absolute');
+        .style('margin', '24px auto');
 
       if (d.occurrence !== 0) {
         _this.d3Service.d3.csv('/data/donnees_traitees/years/' + d.year + '.csv').then(function (formatted_dates_data) {
