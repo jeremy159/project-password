@@ -33,7 +33,7 @@ export class CustomPasswordComponent implements OnInit {
   public crackingTime = '';
   public searchResult$: Observable<User[]>;
   public displayedColumns: string[] = ['username', 'password'];
-  // public data: User[] = [];
+  public dataLength = 0;
   public isLoadingResults = false;
   public hasNoResults = false;
   public hasEncounteredError = false;
@@ -104,13 +104,16 @@ export class CustomPasswordComponent implements OnInit {
         const data: [User[], User[], User[], User[]] = results.data;
         this.isLoadingResults = false;
         if (data[0].length === 0 && data[1].length === 0 && data[2].length === 0 && data[3].length === 0) {
+          this.dataLength = 0;
           this.hasNoResults = true;
           return [];
         }
         const resultsConcanated = data[0].concat(data[1], data[2], data[3]);
+        this.dataLength = resultsConcanated.length;
         return resultsConcanated;
       }),
       catchError(() => {
+        this.dataLength = 0;
         this.isLoadingResults = false;
         this.hasEncounteredError = true;
         return of([]);
