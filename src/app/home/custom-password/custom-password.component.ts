@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import * as zxcvbn from 'zxcvbn';
 import { Observable, empty, of } from 'rxjs';
@@ -26,6 +26,7 @@ interface User {
 })
 export class CustomPasswordComponent implements OnInit {
 
+  @ViewChild('table') private tableElement: ElementRef;
   public searchField: FormControl;
   public formGroup: FormGroup;
   public shieldFillPercentage: number;
@@ -110,7 +111,11 @@ export class CustomPasswordComponent implements OnInit {
         }
         const resultsConcanated = data[0].concat(data[1], data[2], data[3]);
         this.dataLength = resultsConcanated.length;
-        return resultsConcanated;
+
+        // scroll back to top
+        this.tableElement.nativeElement.scroll({top: 0});
+
+        return resultsConcanated.sort((a: User, b: User) => a.username.localeCompare(b.username));
       }),
       catchError(() => {
         this.dataLength = 0;
