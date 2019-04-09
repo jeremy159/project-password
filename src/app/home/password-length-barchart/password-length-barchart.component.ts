@@ -126,7 +126,7 @@ export class PasswordLengthBarchartComponent implements OnInit {
       .attr('text-anchor', 'middle')
       .style('fill', '#657ba0')
       .style('font-size', '20px')
-      .text('Occurences des longueurs');
+      .text('Occurence');
 
     this.svgElement.append('text')
       .attr('x', this.barchartProps.width / 2 + this.barchartProps.margin)
@@ -134,14 +134,14 @@ export class PasswordLengthBarchartComponent implements OnInit {
       .attr('text-anchor', 'middle')
       .style('fill', '#657ba0')
       .style('font-size', '24px')
-      .text('Occurences des longueurs de 10 000 000 de mots de passes');
+      .text('Occurrences des longueurs de 10 000 000 de mots de passes');
 
     this.svgElement.append('text')
       .attr('transform', `translate(${this.barchartProps.width / 2 + this.barchartProps.margin}, ${this.barchartProps.height + 120})`)
       .attr('text-anchor', 'middle')
       .style('fill', '#657ba0')
       .style('font-size', '20px')
-      .text('Longueurs des mots de passe');
+      .text('Longueur');
 
     this.addOutsiderInfoData();
   }
