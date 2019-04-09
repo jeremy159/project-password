@@ -54,20 +54,20 @@ export class PasswordTreemapComponent implements OnInit {
   }
 
   public mouseover(): void {
-    this.tip.style("display", "inline");
+    this.tip.style('display', 'inline');
   }
   public mousemove(d): void {
     this.tip.html(
       `
-        <p class="name"> ${d.data.name}</p>
-        <p class="count">${this.d3Service.getFormattedNumber(d.value)}</p>
+        <p class='name'> ${d.data.name}</p>
+        <p class='count'>${this.d3Service.getFormattedNumber(d.value)}</p>
       `
       )
-      .style("left", (this.d3Service.d3.event.layerX + 10) + "px")
-      .style("top", (this.d3Service.d3.event.layerY - 50) + "px");
+      .style('left', (this.d3Service.d3.event.layerX + 10) + 'px')
+      .style('top', (this.d3Service.d3.event.layerY - 50) + 'px');
   }
   public mouseout(): void {
-    this.tip.style("display", "none");
+    this.tip.style('display', 'none');
   }
 
   private initialize(): void {
@@ -88,11 +88,11 @@ export class PasswordTreemapComponent implements OnInit {
 
     this.treemapProps.color = this.d3Service.d3.scaleOrdinal(this.d3Service.d3.schemeCategory10);
 
-    //Tooltip
-    this.tip = this.d3Service.d3.select("#treemapDiv")
-      .append("div")
-      .attr("class", "tooltip")
-      .style("display", "none");
+    // Tooltip
+    this.tip = this.d3Service.d3.select('#treemapDiv')
+      .append('div')
+      .attr('class', 'tooltip')
+      .style('display', 'none');
 
     /***** Création du treemap *****/
     this.treemap = this.d3Service.d3.treemap()
@@ -135,9 +135,9 @@ export class PasswordTreemapComponent implements OnInit {
       .attr('height', treemapMargin.top - navMargin.top)
       .attr('fill', '#bbbbbb');
     this.grandparent.append('text')
-      .attr('transform', `translate(${6}, ${2*(navMargin.top - treemapMargin.top)/3})`)
-      //.attr('x', 6)
-      //.attr('y', (navMargin.top - treemapMargin.top)/2)
+      .attr('transform', `translate(${6}, ${2 * (navMargin.top - treemapMargin.top) / 3})`)
+      // .attr('x', 6)
+      // .attr('y', (navMargin.top - treemapMargin.top)/2)
       .attr('dy', '.75em');
 
     /***** BARCHART *****/
@@ -192,7 +192,7 @@ export class PasswordTreemapComponent implements OnInit {
 
     // Barre de navigation
     this.grandparent.datum(node)
-      .on('click', d => this.transition(d.parent, true))
+      .on('click', d => this.transition(d.parent))
       .select('text')
       .text(d => this.name(d))
       .attr('fill', d => {if (d.data.name !== 'catégories') {return '#fff'; }});
@@ -214,15 +214,15 @@ export class PasswordTreemapComponent implements OnInit {
       .data(node.children)
       .enter()
       .append('g');
-    g.filter(d => d.children) //On ajoute les enfants aux éléments qui ont des enfants
+    g.filter(d => d.children) // On ajoute les enfants aux éléments qui ont des enfants
       .selectAll('.child')
       .data(d => d.children)
       .enter()
       .append('rect')
       .attr('class', 'child')
-      .on("mouseover", d => this.mouseover())
-      .on("mousemove", d => this.mousemove(d))
-      .on("mouseout", d => this.mouseout())
+      .on('mouseover', d => this.mouseover())
+      .on('mousemove', d => this.mousemove(d))
+      .on('mouseout', d => this.mouseout())
       .call((d) => this.rect(d));
     g.append('rect')
       .attr('class', 'parent')
@@ -230,11 +230,11 @@ export class PasswordTreemapComponent implements OnInit {
     g.append('foreignObject')
       .call((d) => this.rect(d))
       .attr('class', 'foreignobj')
-      .filter(d => d.data.name.split(' ')[0] != 'restants')
+      .filter(d => d.data.name.split(' ')[0] !== 'restants')
       .append('xhtml:div')
-      .html((d) => `<p class="stats"> 
-                        <span class="title">${d.data.name}:</span>
-                        <span class="number">${this.d3Service.getFormattedNumber(d.value)}</span>
+      .html((d) => `<p class='stats'>
+                        <span class='title'>${d.data.name}:</span>
+                        <span class='number'>${this.d3Service.getFormattedNumber(d.value)}</span>
                     </p>`)
       .attr('class', 'textdiv'); // textdiv class allows us to style the text easily with CSS
 
@@ -242,12 +242,12 @@ export class PasswordTreemapComponent implements OnInit {
     g.filter(d => d.children)
       .classed('children', true)
       .on('click', (d) => this.transition(d))
-      //Si on est pas au noeud catégories, on permet l'affichage des valeurs de la case restante
-      .filter(d => d.parent.data.name != 'catégories')
+      // Si on est pas au noeud catégories, on permet l'affichage des valeurs de la case restante
+      .filter(d => d.parent.data.name !== 'catégories')
       .classed('hoverable', true);
 
-    g.filter(d => d.parent.data.name == 'catégories')
-        .classed("selectable", true)
+    g.filter(d => d.parent.data.name === 'catégories')
+        .classed('selectable', true);
     return g;
   }
 
@@ -255,7 +255,7 @@ export class PasswordTreemapComponent implements OnInit {
     * Transition entre les parents/enfants
     * @param {*} node
     */
-   private transition(node, navigationBar: boolean = false): void {
+   private transition(node): void {
     if (this.transitioning || !node) {
       return;
     }
@@ -298,20 +298,20 @@ export class PasswordTreemapComponent implements OnInit {
       _this.transitioning = false;
     });
     t2.selectAll('.textdiv').on('end.remove', function(thisnode) {
-        var height = this.clientHeight;
-        var width = this.clientWidth;
-        var parentHeight = this.parentNode.clientHeight;
-        var parentWidth = this.parentNode.clientWidth;
-        if(height > parentHeight || width > parentWidth) {
-          var parent = _this.d3Service.d3.select(this.parentNode);
+        const height = this.clientHeight;
+        const width = this.clientWidth;
+        const parentHeight = this.parentNode.clientHeight;
+        const parentWidth = this.parentNode.clientWidth;
+        if (height > parentHeight || width > parentWidth) {
+          const parent = _this.d3Service.d3.select(this.parentNode);
           g2.selectAll('rect')
             .filter(d => {
-              return d.data.name == thisnode.data.name;
+              return d.data.name === thisnode.data.name;
             })
-            .classed("notext", true)         
-            .on("mouseover", d => _this.mouseover())
-            .on("mousemove", d => _this.mousemove(d))
-            .on("mouseout", d => _this.mouseout());
+            .classed('notext', true)
+            .on('mouseover', d => _this.mouseover())
+            .on('mousemove', d => _this.mousemove(d))
+            .on('mouseout', d => _this.mouseout());
             parent.remove();
         }
     });
