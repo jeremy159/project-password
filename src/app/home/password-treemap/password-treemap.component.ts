@@ -77,7 +77,7 @@ export class PasswordTreemapComponent implements OnInit {
     const SVGMargin: Margin = { top: 50, right: 0, bottom: 20, left: 150 };
     const treemapMargin: Margin = { top: SVGMargin.top, right: 0, bottom: 0, left: SVGMargin.left };
     const navMargin = { top: treemapMargin.top - 30, right: 0, bottom: 0, left: treemapMargin.left };
-    const barChartMargin: Margin = { top: SVGMargin.top, right: 0, bottom: 0, left: width + treemapMargin.left + 75 };
+    const barChartMargin: Margin = { top: SVGMargin.top, right: 0, bottom: 0, left: width + treemapMargin.left + 125 };
 
     this.treemapProps.x = this.d3Service.d3.scaleLinear()
       .domain([0, width])
@@ -103,7 +103,7 @@ export class PasswordTreemapComponent implements OnInit {
 
     // On ajoute un clipPath pour pas que l'animation du treemap sorte de ses dimensions
     this.d3Service.d3.select('#treemapSvg')
-      .attr('width', 1200)
+      .attr('width', 1250)
       .attr('height', height + treemapMargin.bottom + treemapMargin.top);
 
     this.d3Service.d3.select('#treemapSvg')
