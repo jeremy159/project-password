@@ -18,7 +18,7 @@
     var format = d3.format(",");
     var tip = d3.tip().attr('class', 'd3-tip').html(d => format(d.value));
     var margin = { top: 100, right:0, bottom:50, left:100 };
-    var width = 1300 + margin.left + margin.right;
+    var width = 1000 + margin.left + margin.right;
     var height = 300 + margin.top + margin.bottom;
 
     var SVG = {
